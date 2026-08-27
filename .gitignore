@@ -1,0 +1,32 @@
+# Node dependencies
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Next.js build & environment
+client/.next/
+client/out/
+client/.env*.local
+client/.env
+
+# Strapi build & environment
+server/build/
+server/.tmp/
+server/.cache/
+server/public/uploads/
+server/.env
+
+# Environment & Misc root files
+.env
+.env*
+.DS_Store
+*.pem
+
+# Package manager logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Vercel
+.vercel
