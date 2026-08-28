@@ -28,6 +28,9 @@ module.exports = () => ({
       sessions: {
         httpOnly: true,
       },
+      register: {
+        allowedFields: ['user_role'],
+      }
     },
   },
   upload: {

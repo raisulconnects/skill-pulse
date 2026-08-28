@@ -2,10 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Eye, EyeOff, ArrowRight, AlertCircle, Lock, Mail, Check } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Eye, EyeOff, ArrowRight, AlertCircle, Mail } from "lucide-react";
 import AuthLayout from "@/components/auth/AuthLayout";
+import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const { login, isAuthenticated } = useAuth();
+
   const [formData, setFormData] = useState({
     identifier: "",
     password: "",
@@ -14,7 +19,7 @@ export default function LoginPage() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -25,21 +30,24 @@ export default function LoginPage() {
     if (errorMessage) setErrorMessage("");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.identifier.trim() || !formData.password.trim()) {
       setErrorMessage("Please enter both your email/username and password.");
       return;
     }
 
-    setIsLoading(true);
-    // UI placeholder for authentication
-    setTimeout(() => {
-      setIsLoading(false);
-      // Demonstrative feedback
-      setErrorMessage("");
-      alert(`[Frontend Mock] Login attempt for: ${formData.identifier}`);
-    }, 800);
+    setIsSubmitting(true);
+    setErrorMessage("");
+
+    const result = await login(formData.identifier, formData.password);
+
+    if (result.success) {
+      router.push("/dashboard");
+    } else {
+      setErrorMessage(result.error || "Invalid credentials. Please try again.");
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -80,7 +88,8 @@ export default function LoginPage() {
                 placeholder="alex@example.com or alex_dev"
                 autoComplete="username"
                 required
-                className="w-full bg-[#fcfaf5] border border-[#1a3300] rounded-[6px] px-4 py-3 text-[15px] text-[#1a3300] placeholder:text-[#1a3300]/40 focus:outline-none focus:ring-2 focus:ring-[#ffe95c] focus:border-[#1a3300] transition-all"
+                disabled={isSubmitting}
+                className="w-full bg-[#fcfaf5] border border-[#1a3300] rounded-[6px] px-4 py-3 text-[15px] text-[#1a3300] placeholder:text-[#1a3300]/40 focus:outline-none focus:ring-2 focus:ring-[#ffe95c] focus:border-[#1a3300] transition-all disabled:opacity-60"
               />
               <Mail className="w-4 h-4 text-[#1a3300]/40 absolute right-3.5 top-3.5 pointer-events-none" />
             </div>
@@ -112,7 +121,8 @@ export default function LoginPage() {
                 placeholder="••••••••••••"
                 autoComplete="current-password"
                 required
-                className="w-full bg-[#fcfaf5] border border-[#1a3300] rounded-[6px] px-4 py-3 text-[15px] text-[#1a3300] placeholder:text-[#1a3300]/40 focus:outline-none focus:ring-2 focus:ring-[#ffe95c] focus:border-[#1a3300] transition-all pr-11"
+                disabled={isSubmitting}
+                className="w-full bg-[#fcfaf5] border border-[#1a3300] rounded-[6px] px-4 py-3 text-[15px] text-[#1a3300] placeholder:text-[#1a3300]/40 focus:outline-none focus:ring-2 focus:ring-[#ffe95c] focus:border-[#1a3300] transition-all pr-11 disabled:opacity-60"
               />
               <button
                 type="button"
@@ -137,6 +147,7 @@ export default function LoginPage() {
                 name="rememberMe"
                 checked={formData.rememberMe}
                 onChange={handleChange}
+                disabled={isSubmitting}
                 className="w-4 h-4 rounded-[4px] border-[#1a3300] text-[#1a3300] accent-[#1a3300] focus:ring-0 focus:ring-offset-0 cursor-pointer"
               />
               <span className="text-[13px] font-mono text-[#1a3300]/80">
@@ -148,10 +159,10 @@ export default function LoginPage() {
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={isSubmitting}
             className="w-full inline-flex items-center justify-center gap-2 bg-[#1a3300] text-[#fcfaf5] text-[15px] font-medium py-3.5 px-6 rounded-[6px] hover:bg-[#1a3300]/90 transition-transform active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px]"
           >
-            {isLoading ? (
+            {isSubmitting ? (
               <span className="inline-flex items-center gap-2">
                 <span className="w-4 h-4 border-2 border-[#fcfaf5] border-t-transparent rounded-full animate-spin" />
                 <span>Signing In...</span>
@@ -167,33 +178,20 @@ export default function LoginPage() {
 
         {/* Demo Fast-Fill Helper */}
         <div className="mt-6 pt-5 border-t border-[#b6b6b6]/40 flex items-center justify-between text-[12px] font-mono text-[#1a3300]/70">
-          <span>Quick fill demo:</span>
+          <span>Quick fill test:</span>
           <div className="flex gap-2">
             <button
               type="button"
               onClick={() =>
                 setFormData({
-                  identifier: "student@skillpulse.dev",
+                  identifier: "johndoe",
                   password: "password123",
                   rememberMe: true,
                 })
               }
               className="bg-[#d5f5c2] border border-[#1a3300]/20 px-2 py-0.5 rounded-[4px] text-[#1a3300] font-semibold hover:bg-[#d5f5c2]/80"
             >
-              Student
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                setFormData({
-                  identifier: "instructor@skillpulse.dev",
-                  password: "password123",
-                  rememberMe: true,
-                })
-              }
-              className="bg-[#ffe95c] border border-[#1a3300]/20 px-2 py-0.5 rounded-[4px] text-[#1a3300] font-semibold hover:bg-[#ffe95c]/80"
-            >
-              Instructor
+              Demo User
             </button>
           </div>
         </div>

@@ -2,7 +2,7 @@
 
 import { useState, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   GraduationCap,
   Sparkles,
@@ -14,14 +14,16 @@ import {
   EyeOff,
   User,
   Mail,
-  Lock,
   AtSign,
-  ShieldCheck,
 } from "lucide-react";
 import AuthLayout from "@/components/auth/AuthLayout";
+import { useAuth } from "@/context/AuthContext";
 
 function RegisterContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
+  const { register } = useAuth();
+
   const initialRoleParam = searchParams.get("role");
 
   // Step 1: Role Selection | Step 2: Account Details
@@ -42,7 +44,7 @@ function RegisterContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleRoleSelect = (role) => {
     setFormData((prev) => ({ ...prev, role }));
@@ -59,7 +61,7 @@ function RegisterContent() {
     if (errorMessage) setErrorMessage("");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!formData.fullName.trim() || !formData.username.trim() || !formData.email.trim()) {
@@ -82,14 +84,24 @@ function RegisterContent() {
       return;
     }
 
-    setIsLoading(true);
-    // UI placeholder for account creation
-    setTimeout(() => {
-      setIsLoading(false);
-      alert(
-        `[Frontend Mock] Registered successfully as [${formData.role.toUpperCase()}]:\nName: ${formData.fullName}\nUsername: ${formData.username}\nEmail: ${formData.email}`
-      );
-    }, 800);
+    setIsSubmitting(true);
+    setErrorMessage("");
+
+    const result = await register({
+      username: formData.username,
+      email: formData.email,
+      password: formData.password,
+      role: formData.role,
+      user_role: formData.role,
+      fullName: formData.fullName,
+    });
+
+    if (result.success) {
+      router.push("/dashboard");
+    } else {
+      setErrorMessage(result.error || "Registration failed. Please try again.");
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -244,7 +256,8 @@ function RegisterContent() {
             <button
               type="button"
               onClick={() => setStep(1)}
-              className="inline-flex items-center gap-1 text-[12px] font-mono text-[#1a3300]/80 hover:text-[#1a3300] underline underline-offset-2"
+              disabled={isSubmitting}
+              className="inline-flex items-center gap-1 text-[12px] font-mono text-[#1a3300]/80 hover:text-[#1a3300] underline underline-offset-2 disabled:opacity-60"
             >
               <ArrowLeft className="w-3 h-3" />
               <span>Change path</span>
@@ -277,7 +290,8 @@ function RegisterContent() {
                   onChange={handleChange}
                   placeholder="e.g. Alex Morgan"
                   required
-                  className="w-full bg-[#fcfaf5] border border-[#1a3300] rounded-[6px] px-4 py-2.5 text-[15px] text-[#1a3300] placeholder:text-[#1a3300]/40 focus:outline-none focus:ring-2 focus:ring-[#ffe95c] focus:border-[#1a3300] transition-all"
+                  disabled={isSubmitting}
+                  className="w-full bg-[#fcfaf5] border border-[#1a3300] rounded-[6px] px-4 py-2.5 text-[15px] text-[#1a3300] placeholder:text-[#1a3300]/40 focus:outline-none focus:ring-2 focus:ring-[#ffe95c] focus:border-[#1a3300] transition-all disabled:opacity-60"
                 />
                 <User className="w-4 h-4 text-[#1a3300]/40 absolute right-3.5 top-3.5 pointer-events-none" />
               </div>
@@ -300,7 +314,8 @@ function RegisterContent() {
                   onChange={handleChange}
                   placeholder="e.g. alex_dev"
                   required
-                  className="w-full bg-[#fcfaf5] border border-[#1a3300] rounded-[6px] px-4 py-2.5 text-[15px] text-[#1a3300] placeholder:text-[#1a3300]/40 focus:outline-none focus:ring-2 focus:ring-[#ffe95c] focus:border-[#1a3300] transition-all"
+                  disabled={isSubmitting}
+                  className="w-full bg-[#fcfaf5] border border-[#1a3300] rounded-[6px] px-4 py-2.5 text-[15px] text-[#1a3300] placeholder:text-[#1a3300]/40 focus:outline-none focus:ring-2 focus:ring-[#ffe95c] focus:border-[#1a3300] transition-all disabled:opacity-60"
                 />
                 <AtSign className="w-4 h-4 text-[#1a3300]/40 absolute right-3.5 top-3.5 pointer-events-none" />
               </div>
@@ -323,7 +338,8 @@ function RegisterContent() {
                   onChange={handleChange}
                   placeholder="alex@company.com"
                   required
-                  className="w-full bg-[#fcfaf5] border border-[#1a3300] rounded-[6px] px-4 py-2.5 text-[15px] text-[#1a3300] placeholder:text-[#1a3300]/40 focus:outline-none focus:ring-2 focus:ring-[#ffe95c] focus:border-[#1a3300] transition-all"
+                  disabled={isSubmitting}
+                  className="w-full bg-[#fcfaf5] border border-[#1a3300] rounded-[6px] px-4 py-2.5 text-[15px] text-[#1a3300] placeholder:text-[#1a3300]/40 focus:outline-none focus:ring-2 focus:ring-[#ffe95c] focus:border-[#1a3300] transition-all disabled:opacity-60"
                 />
                 <Mail className="w-4 h-4 text-[#1a3300]/40 absolute right-3.5 top-3.5 pointer-events-none" />
               </div>
@@ -346,7 +362,8 @@ function RegisterContent() {
                   onChange={handleChange}
                   placeholder="At least 6 characters"
                   required
-                  className="w-full bg-[#fcfaf5] border border-[#1a3300] rounded-[6px] px-4 py-2.5 text-[15px] text-[#1a3300] placeholder:text-[#1a3300]/40 focus:outline-none focus:ring-2 focus:ring-[#ffe95c] focus:border-[#1a3300] transition-all pr-11"
+                  disabled={isSubmitting}
+                  className="w-full bg-[#fcfaf5] border border-[#1a3300] rounded-[6px] px-4 py-2.5 text-[15px] text-[#1a3300] placeholder:text-[#1a3300]/40 focus:outline-none focus:ring-2 focus:ring-[#ffe95c] focus:border-[#1a3300] transition-all pr-11 disabled:opacity-60"
                 />
                 <button
                   type="button"
@@ -376,7 +393,8 @@ function RegisterContent() {
                   onChange={handleChange}
                   placeholder="Re-enter password"
                   required
-                  className="w-full bg-[#fcfaf5] border border-[#1a3300] rounded-[6px] px-4 py-2.5 text-[15px] text-[#1a3300] placeholder:text-[#1a3300]/40 focus:outline-none focus:ring-2 focus:ring-[#ffe95c] focus:border-[#1a3300] transition-all pr-11"
+                  disabled={isSubmitting}
+                  className="w-full bg-[#fcfaf5] border border-[#1a3300] rounded-[6px] px-4 py-2.5 text-[15px] text-[#1a3300] placeholder:text-[#1a3300]/40 focus:outline-none focus:ring-2 focus:ring-[#ffe95c] focus:border-[#1a3300] transition-all pr-11 disabled:opacity-60"
                 />
                 <button
                   type="button"
@@ -401,6 +419,7 @@ function RegisterContent() {
                   name="agreeToTerms"
                   checked={formData.agreeToTerms}
                   onChange={handleChange}
+                  disabled={isSubmitting}
                   className="w-4 h-4 mt-0.5 rounded-[4px] border-[#1a3300] text-[#1a3300] accent-[#1a3300] focus:ring-0 focus:ring-offset-0 cursor-pointer shrink-0"
                 />
                 <span className="text-[13px] text-[#1a3300]/85 leading-snug">
@@ -420,10 +439,10 @@ function RegisterContent() {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isSubmitting}
               className="w-full inline-flex items-center justify-center gap-2 bg-[#1a3300] text-[#fcfaf5] text-[15px] font-medium py-3.5 px-6 rounded-[6px] hover:bg-[#1a3300]/90 transition-transform active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px] mt-2"
             >
-              {isLoading ? (
+              {isSubmitting ? (
                 <span className="inline-flex items-center gap-2">
                   <span className="w-4 h-4 border-2 border-[#fcfaf5] border-t-transparent rounded-full animate-spin" />
                   <span>Creating {formData.role === "student" ? "Student" : "Instructor"} Account...</span>

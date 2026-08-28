@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X, ArrowRight, Sparkles } from "lucide-react";
+import { Menu, X, ArrowRight, Sparkles, User, LogOut, LayoutDashboard } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, isAuthenticated, logout } = useAuth();
 
   const navLinks = [
     { name: "Courses", href: "#courses" },
@@ -53,19 +55,40 @@ export default function Navbar() {
 
         {/* Action Buttons */}
         <div className="hidden md:flex items-center gap-3">
-          <Link
-            href="/login"
-            className="text-[14px] font-medium text-[#1a3300] border border-[#1a3300] rounded-[6px] px-4 py-2 hover:bg-[#1a3300]/5 transition-colors"
-          >
-            Log In
-          </Link>
-          <Link
-            href="/register"
-            className="inline-flex items-center gap-1.5 text-[14px] font-medium text-[#fcfaf5] bg-[#1a3300] rounded-[6px] px-4 py-2 hover:bg-[#1a3300]/90 transition-transform active:scale-[0.98] shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px]"
-          >
-            <span>Start Learning</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+          {isAuthenticated ? (
+            <>
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center gap-1.5 text-[14px] font-medium text-[#1a3300] bg-[#d5f5c2] border border-[#1a3300] rounded-[6px] px-4 py-2 hover:bg-[#d5f5c2]/80 transition-colors"
+              >
+                <LayoutDashboard className="w-4 h-4" />
+                <span>Dashboard</span>
+              </Link>
+              <button
+                onClick={logout}
+                className="text-[13px] font-mono text-[#1a3300]/70 hover:text-[#1a3300] px-2 py-2"
+                title="Log Out"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="text-[14px] font-medium text-[#1a3300] border border-[#1a3300] rounded-[6px] px-4 py-2 hover:bg-[#1a3300]/5 transition-colors"
+              >
+                Log In
+              </Link>
+              <Link
+                href="/register"
+                className="inline-flex items-center gap-1.5 text-[14px] font-medium text-[#fcfaf5] bg-[#1a3300] rounded-[6px] px-4 py-2 hover:bg-[#1a3300]/90 transition-transform active:scale-[0.98] shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px]"
+              >
+                <span>Start Learning</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile menu button */}
@@ -94,21 +117,46 @@ export default function Navbar() {
           ))}
           <hr className="border-[#b6b6b6]/30 my-1" />
           <div className="flex flex-col gap-2 pt-1">
-            <Link
-              href="/login"
-              onClick={() => setMobileMenuOpen(false)}
-              className="w-full text-center text-[14px] font-medium text-[#1a3300] border border-[#1a3300] rounded-[6px] py-2.5"
-            >
-              Log In
-            </Link>
-            <Link
-              href="/register"
-              onClick={() => setMobileMenuOpen(false)}
-              className="w-full inline-flex items-center justify-center gap-1.5 text-[14px] font-medium text-[#fcfaf5] bg-[#1a3300] rounded-[6px] py-2.5"
-            >
-              <span>Start Learning</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <Link
+                  href="/dashboard"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full inline-flex items-center justify-center gap-1.5 text-[14px] font-medium text-[#1a3300] bg-[#d5f5c2] border border-[#1a3300] rounded-[6px] py-2.5"
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  <span>Go to Dashboard</span>
+                </Link>
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    logout();
+                  }}
+                  className="w-full inline-flex items-center justify-center gap-1.5 text-[14px] font-medium text-[#cb5521] border border-[#cb5521]/40 rounded-[6px] py-2.5"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Log Out</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full text-center text-[14px] font-medium text-[#1a3300] border border-[#1a3300] rounded-[6px] py-2.5"
+                >
+                  Log In
+                </Link>
+                <Link
+                  href="/register"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full inline-flex items-center justify-center gap-1.5 text-[14px] font-medium text-[#fcfaf5] bg-[#1a3300] rounded-[6px] py-2.5"
+                >
+                  <span>Start Learning</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}

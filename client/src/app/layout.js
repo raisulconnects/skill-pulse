@@ -1,4 +1,5 @@
 import { Bricolage_Grotesque, Inter, Roboto_Mono } from "next/font/google";
+import { AuthProvider } from "@/context/AuthContext";
 import "./globals.css";
 
 const bricolageGrotesque = Bricolage_Grotesque({
@@ -35,8 +36,9 @@ export default function RootLayout({ children }) {
       className={`${bricolageGrotesque.variable} ${inter.variable} ${robotoMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-[#fcfaf5] text-[#1a3300] font-sans selection:bg-[#ffe95c] selection:text-[#1a3300]">
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
 }
+
