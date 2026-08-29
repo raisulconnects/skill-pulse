@@ -22,6 +22,7 @@ export default function Footer() {
       { name: "Community Forum", href: "/community" },
     ],
     company: [
+      { name: "Blog & Journal", href: "/blog" },
       { name: "About SkillPulse", href: "/about" },
       { name: "Instructor Portal", href: "/teach" },
       { name: "Enterprise Plans", href: "/enterprise" },

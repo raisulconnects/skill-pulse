@@ -10,11 +10,11 @@ export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
 
   const navLinks = [
-    { name: "Courses", href: "#courses" },
-    { name: "Skill Paths", href: "#paths" },
-    { name: "Quizzes", href: "#quizzes" },
-    { name: "Features", href: "#features" },
-    { name: "Community", href: "#community" },
+    { name: "Courses", href: "/#courses" },
+    { name: "Blog", href: "/blog" },
+    { name: "Quizzes", href: "/#quizzes" },
+    { name: "Features", href: "/#features" },
+    { name: "Community", href: "/#community" },
   ];
 
   return (
