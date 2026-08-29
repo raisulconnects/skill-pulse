@@ -76,7 +76,7 @@ export const DASHBOARD_NAV = {
     { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
     { name: "All Courses", href: "/dashboard/courses", icon: BookOpen },
     { name: "Create Course", href: "/dashboard/courses/create", icon: PlusCircle },
-    { name: "User Management", href: "#users", icon: Users },
+    { name: "User Management", href: "/dashboard/admin/users", icon: Users },
     { name: "System Settings", href: "#settings", icon: Settings },
   ],
 };

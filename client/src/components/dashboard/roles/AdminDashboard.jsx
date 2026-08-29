@@ -33,10 +33,13 @@ export default function AdminDashboard({ user }) {
           </div>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            <button className="inline-flex items-center justify-center gap-2 bg-[#1a3300] text-[#fcfaf5] px-5 py-3 rounded-[6px] text-[14px] font-medium hover:bg-[#1a3300]/90 transition-transform active:scale-[0.98] shadow-sm">
+            <Link
+              href="/dashboard/admin/users"
+              className="inline-flex items-center justify-center gap-2 bg-[#1a3300] text-[#fcfaf5] px-5 py-3 rounded-[6px] text-[14px] font-medium hover:bg-[#1a3300]/90 transition-transform active:scale-[0.98] shadow-sm"
+            >
               <Users className="w-4 h-4 text-[#ffe95c]" />
               <span>User Management</span>
-            </button>
+            </Link>
           </div>
         </div>
       </div>
@@ -113,16 +116,19 @@ export default function AdminDashboard({ user }) {
           />
 
           <div className="bg-[#fcfaf5] border border-[#1a3300]/25 rounded-[12px] p-4 space-y-3 shadow-sm">
-            <button className="w-full flex items-center justify-between p-3 rounded-[8px] bg-[#d5f5c2]/40 border border-[#1a3300]/20 hover:bg-[#d5f5c2]/70 transition-colors text-left">
+            <Link
+              href="/dashboard/admin/users"
+              className="w-full flex items-center justify-between p-3 rounded-[8px] bg-[#d5f5c2]/40 border border-[#1a3300]/20 hover:bg-[#d5f5c2]/70 transition-colors text-left"
+            >
               <div className="flex items-center gap-3">
                 <Users className="w-4 h-4 text-[#1a3300]" />
                 <div>
                   <span className="font-bold text-[14px] block leading-none mb-0.5">Manage Platform Users</span>
-                  <span className="text-[11px] font-mono text-[#1a3300]/70">Roles, block/unblock, permissions</span>
+                  <span className="text-[11px] font-mono text-[#1a3300]/70">Roles, privileges & assignment</span>
                 </div>
               </div>
               <ArrowRight className="w-4 h-4 text-[#1a3300]/60" />
-            </button>
+            </Link>
 
             <Link
               href="/dashboard/courses"
