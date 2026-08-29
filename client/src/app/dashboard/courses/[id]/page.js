@@ -60,7 +60,7 @@ export default function CourseDetailsPage() {
   const userRole = user?.user_role || "student";
 
   const loadQuizzes = useCallback(async () => {
-    if (!courseId || userRole === "student") return;
+    if (!courseId) return;
     setQuizzesLoading(true);
     try {
       const res = await fetch(`/api/quizzes?filters[course][documentId][$eq]=${courseId}&populate[0]=questions&populate[1]=author`);
@@ -74,7 +74,7 @@ export default function CourseDetailsPage() {
     } finally {
       setQuizzesLoading(false);
     }
-  }, [courseId, userRole]);
+  }, [courseId]);
 
   const loadCourseData = async () => {
     if (!courseId) return;
@@ -537,8 +537,8 @@ export default function CourseDetailsPage() {
                     )}
                 </div>
 
-            {/* Quizzes Section — Authoring for admin/content_manager/instructor */}
-            {isInstructorOrAdmin && (
+            {/* Quizzes Section — Authoring for admin/content_manager/instructor OR Student view for enrolled students */}
+            {(isInstructorOrAdmin || (userRole === "student" && isEnrolled)) && (
               <div className="bg-[#fcfaf5] border border-[#1a3300]/25 rounded-[12px] p-6 shadow-sm">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-[#b6b6b6]/30">
                   <div>
@@ -546,20 +546,22 @@ export default function CourseDetailsPage() {
                       className="text-[20px] font-bold text-[#1a3300]"
                       style={{ fontFamily: "var(--font-bricolage-grotesque), var(--font-bricolage), sans-serif" }}
                     >
-                      Course Quizzes
+                      Course Quizzes & Assessments
                     </h3>
                     <p className="text-[12px] font-mono text-[#1a3300]/60">
-                      {quizzes.length} {quizzes.length === 1 ? "Quiz" : "Quizzes"} — manage assessments
+                      {quizzes.length} {quizzes.length === 1 ? "Quiz" : "Quizzes"} available
                     </p>
                   </div>
 
-                  <Link
-                    href={`/dashboard/courses/${course?.documentId || courseId}/quizzes/new`}
-                    className="inline-flex items-center gap-1.5 bg-[#1a3300] text-[#fcfaf5] px-3.5 py-1.5 rounded-[6px] text-[13px] font-medium hover:bg-[#1a3300]/90 transition-transform active:scale-[0.98] shadow-sm self-start sm:self-auto"
-                  >
-                    <PlusCircle className="w-3.5 h-3.5 text-[#ffe95c]" />
-                    <span>Create Quiz</span>
-                  </Link>
+                  {isInstructorOrAdmin && (
+                    <Link
+                      href={`/dashboard/courses/${course?.documentId || courseId}/quizzes/new`}
+                      className="inline-flex items-center gap-1.5 bg-[#1a3300] text-[#fcfaf5] px-3.5 py-1.5 rounded-[6px] text-[13px] font-medium hover:bg-[#1a3300]/90 transition-transform active:scale-[0.98] shadow-sm self-start sm:self-auto"
+                    >
+                      <PlusCircle className="w-3.5 h-3.5 text-[#ffe95c]" />
+                      <span>Create Quiz</span>
+                    </Link>
+                  )}
                 </div>
 
                 {quizzesLoading ? (
@@ -569,17 +571,19 @@ export default function CourseDetailsPage() {
                 ) : quizzes.length === 0 ? (
                   <div className="p-6 text-center bg-[#1a3300]/5 rounded-[8px] border border-dashed border-[#1a3300]/20">
                     <HelpCircle className="w-8 h-8 text-[#1a3300]/40 mx-auto mb-2" />
-                    <p className="text-[14px] text-[#1a3300]/70 font-medium">No quizzes created yet</p>
+                    <p className="text-[14px] text-[#1a3300]/70 font-medium">No quizzes available yet</p>
                     <p className="text-[12px] font-mono text-[#1a3300]/50 mt-1">
-                      Click &lsquo;Create Quiz&rsquo; above to add an assessment for this course.
+                      {isInstructorOrAdmin
+                        ? "Click 'Create Quiz' above to add an assessment for this course."
+                        : "Quizzes will appear here once added by the instructor."}
                     </p>
                   </div>
                 ) : (
                   <div className="space-y-2.5">
                     {quizzes.map((quiz) => {
                       const qId = quiz.documentId || quiz.id;
-                      const questionCount = Array.isArray(quiz.questions) ? quiz.questions.length : 0;
-                      const authorName = quiz.author?.username || "Author";
+                      const questionCount = Array.isArray(quiz.questions) ? quiz.questions.length : (quiz.questions_count || 0);
+                      const authorName = quiz.author?.username || "Faculty";
                       return (
                         <div
                           key={qId}
@@ -598,27 +602,39 @@ export default function CourseDetailsPage() {
                           </div>
 
                           <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
-                            <Link
-                              href={`/dashboard/courses/${course?.documentId || courseId}/quizzes/${qId}/edit`}
-                              className="inline-flex items-center gap-1 text-[12px] font-mono font-medium px-3 py-1 rounded-[5px] bg-[#d5f5c2] border border-[#1a3300]/20 text-[#1a3300] hover:bg-[#d5f5c2]/80 transition-colors"
-                            >
-                              <Settings2 className="w-3 h-3" />
-                              <span>Manage Questions</span>
-                            </Link>
-                            <Link
-                              href={`/dashboard/courses/${course?.documentId || courseId}/quizzes/${qId}/edit`}
-                              className="p-1.5 text-[#1a3300]/70 hover:text-[#1a3300] hover:bg-[#1a3300]/10 rounded-[4px] transition-colors"
-                              title="Edit Quiz"
-                            >
-                              <Edit3 className="w-3.5 h-3.5" />
-                            </Link>
-                            <button
-                              onClick={() => setQuizToDelete(quiz)}
-                              className="p-1.5 text-[#cb5521]/80 hover:text-[#cb5521] hover:bg-[#cb5521]/10 rounded-[4px] transition-colors"
-                              title="Delete Quiz"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
+                            {userRole === "student" ? (
+                              <Link
+                                href={`/dashboard/courses/${course?.documentId || courseId}/quizzes/${qId}/take`}
+                                className="inline-flex items-center gap-1.5 text-[12px] font-mono font-bold px-3.5 py-1.5 rounded-[5px] bg-[#1a3300] text-[#fcfaf5] hover:bg-[#1a3300]/90 transition-transform active:scale-[0.98] shadow-xs"
+                              >
+                                <Play className="w-3.5 h-3.5 fill-[#ffe95c] text-[#ffe95c]" />
+                                <span>Start Quiz</span>
+                              </Link>
+                            ) : (
+                              <>
+                                <Link
+                                  href={`/dashboard/courses/${course?.documentId || courseId}/quizzes/${qId}/edit`}
+                                  className="inline-flex items-center gap-1 text-[12px] font-mono font-medium px-3 py-1 rounded-[5px] bg-[#d5f5c2] border border-[#1a3300]/20 text-[#1a3300] hover:bg-[#d5f5c2]/80 transition-colors"
+                                >
+                                  <Settings2 className="w-3 h-3" />
+                                  <span>Manage Questions</span>
+                                </Link>
+                                <Link
+                                  href={`/dashboard/courses/${course?.documentId || courseId}/quizzes/${qId}/edit`}
+                                  className="p-1.5 text-[#1a3300]/70 hover:text-[#1a3300] hover:bg-[#1a3300]/10 rounded-[4px] transition-colors"
+                                  title="Edit Quiz"
+                                >
+                                  <Edit3 className="w-3.5 h-3.5" />
+                                </Link>
+                                <button
+                                  onClick={() => setQuizToDelete(quiz)}
+                                  className="p-1.5 text-[#cb5521]/80 hover:text-[#cb5521] hover:bg-[#cb5521]/10 rounded-[4px] transition-colors"
+                                  title="Delete Quiz"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </>
+                            )}
                           </div>
                         </div>
                       );

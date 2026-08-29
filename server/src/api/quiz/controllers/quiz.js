@@ -1,9 +1,8 @@
 'use strict';
 
 /**
- * Quiz controller with role-based access control and course ownership enforcement.
- * Phase 1: Authoring only. Student quiz-taking API is NOT implemented here.
- * correctOption is available for authors; future student API must omit it.
+ * Quiz controller with role-based access control, course ownership enforcement,
+ * and Student Quiz Taking (Phase 2).
  */
 
 const { createCoreController } = require('@strapi/strapi').factories;
@@ -59,8 +58,47 @@ module.exports = createCoreController('api::quiz.quiz', ({ strapi }) => ({
     }
 
     if (role === 'student') {
-      // Students cannot access quiz authoring list
-      return ctx.forbidden('Students cannot access quiz management');
+      if (!courseId) {
+        return ctx.forbidden('Students cannot access global quiz management list');
+      }
+
+      // Check student enrollment in the course
+      let courseObj = null;
+      try {
+        courseObj = await strapi.documents('api::course.course').findOne({
+          documentId: courseId,
+        });
+      } catch {
+        courseObj = await strapi.db.query('api::course.course').findOne({
+          where: { id: courseId },
+        });
+      }
+
+      if (!courseObj) return ctx.notFound('Course not found');
+
+      const studentId = user.id;
+      const targetCourseId = courseObj.id;
+      const targetDocId = courseObj.documentId;
+
+      const enrollments = await strapi.db.query('api::enrollment.enrollment').findMany({
+        where: {
+          student: { id: studentId },
+          $or: [
+            { course: { id: targetCourseId } },
+            ...(targetDocId ? [{ course: { documentId: targetDocId } }] : []),
+          ],
+        },
+      });
+
+      if (!enrollments || enrollments.length === 0) {
+        return ctx.forbidden('You must be enrolled in this course to view its quizzes');
+      }
+
+      // Ensure correct_option is NEVER exposed
+      query.populate = {
+        course: { fields: ['id', 'documentId', 'title'] },
+        questions: { fields: ['id', 'documentId', 'question_text'] },
+      };
     }
 
     ctx.query = query;
@@ -267,5 +305,239 @@ module.exports = createCoreController('api::quiz.quiz', ({ strapi }) => ({
     }
 
     return await super.delete(ctx);
+  },
+
+  // =========================================================================
+  // PHASE 2: Student Quiz Taking Endpoints
+  // =========================================================================
+
+  /**
+   * GET /api/quizzes/:id/take
+   * Returns quiz metadata and questions for student taking.
+   * ABSOLUTELY MUST NOT EXPOSE correct_option.
+   */
+  async getQuizForStudent(ctx) {
+    const user = ctx.state.user;
+    if (!user) {
+      return ctx.unauthorized('You must be authenticated to take a quiz');
+    }
+
+    const role = user.user_role;
+    if (role !== 'student') {
+      return ctx.forbidden('Only students can use the quiz-taking flow');
+    }
+
+    const { id } = ctx.params;
+
+    let quiz = null;
+    try {
+      quiz = await strapi.documents('api::quiz.quiz').findOne({
+        documentId: id,
+        populate: {
+          course: true,
+          questions: { fields: ['id', 'documentId', 'question_text', 'options'] },
+        },
+      });
+    } catch {
+      quiz = await strapi.db.query('api::quiz.quiz').findOne({
+        where: { id },
+        populate: ['course', 'questions'],
+      });
+    }
+
+    if (!quiz) {
+      return ctx.notFound('Quiz not found');
+    }
+
+    const course = quiz.course;
+    if (!course) {
+      return ctx.badRequest('Quiz does not belong to a valid course');
+    }
+
+    // Verify student enrollment in course
+    const studentId = user.id;
+    const targetCourseId = course.id;
+    const targetDocId = course.documentId;
+
+    const enrollments = await strapi.db.query('api::enrollment.enrollment').findMany({
+      where: {
+        student: { id: studentId },
+        $or: [
+          { course: { id: targetCourseId } },
+          ...(targetDocId ? [{ course: { documentId: targetDocId } }] : []),
+        ],
+      },
+    });
+
+    if (!enrollments || enrollments.length === 0) {
+      return ctx.forbidden('You must be enrolled in this course to take this quiz');
+    }
+
+    const questions = quiz.questions || [];
+    if (questions.length === 0) {
+      return ctx.badRequest('This quiz does not have any questions available yet');
+    }
+
+    // Sanitize questions: STRICTLY STRIP correct_option
+    const sanitizedQuestions = questions.map((q, idx) => ({
+      id: String(q.documentId || q.id),
+      order: idx + 1,
+      question_text: q.question_text,
+      options: Array.isArray(q.options) ? q.options : [],
+    }));
+
+    return ctx.send({
+      data: {
+        id: String(quiz.documentId || quiz.id),
+        title: quiz.title,
+        course: {
+          id: String(course.documentId || course.id),
+          title: course.title,
+        },
+        questions: sanitizedQuestions,
+        total_questions: sanitizedQuestions.length,
+      },
+    });
+  },
+
+  /**
+   * POST /api/quizzes/:id/submit
+   * Evaluates student submitted answers against server-side correct_option values.
+   * Calculates score, creates QuizAttempt record, and returns immediate result.
+   */
+  async submitQuiz(ctx) {
+    const user = ctx.state.user;
+    if (!user) {
+      return ctx.unauthorized('You must be authenticated to submit a quiz');
+    }
+
+    const role = user.user_role;
+    if (role !== 'student') {
+      return ctx.forbidden('Only students can submit quiz attempts');
+    }
+
+    const { id } = ctx.params;
+
+    let quiz = null;
+    try {
+      quiz = await strapi.documents('api::quiz.quiz').findOne({
+        documentId: id,
+        populate: {
+          course: true,
+          questions: { fields: ['id', 'documentId', 'question_text', 'options', 'correct_option'] },
+        },
+      });
+    } catch {
+      quiz = await strapi.db.query('api::quiz.quiz').findOne({
+        where: { id },
+        populate: ['course', 'questions'],
+      });
+    }
+
+    if (!quiz) {
+      return ctx.notFound('Quiz not found');
+    }
+
+    const course = quiz.course;
+    if (!course) {
+      return ctx.badRequest('Quiz does not belong to a valid course');
+    }
+
+    // Verify student enrollment in course
+    const studentId = user.id;
+    const targetCourseId = course.id;
+    const targetDocId = course.documentId;
+
+    const enrollments = await strapi.db.query('api::enrollment.enrollment').findMany({
+      where: {
+        student: { id: studentId },
+        $or: [
+          { course: { id: targetCourseId } },
+          ...(targetDocId ? [{ course: { documentId: targetDocId } }] : []),
+        ],
+      },
+    });
+
+    if (!enrollments || enrollments.length === 0) {
+      return ctx.forbidden('You must be enrolled in this course to submit this quiz');
+    }
+
+    const body = ctx.request.body || {};
+    const payload = body.data || body;
+    const submittedAnswers = Array.isArray(payload.answers) ? payload.answers : [];
+
+    if (submittedAnswers.length === 0) {
+      return ctx.badRequest('No answers provided for submission');
+    }
+
+    const questions = quiz.questions || [];
+    if (questions.length === 0) {
+      return ctx.badRequest('This quiz has no questions');
+    }
+
+    // Calculate score server-side
+    let score = 0;
+    const evaluatedAnswers = [];
+
+    for (const q of questions) {
+      const qId = String(q.documentId || q.id);
+      const studentAns = submittedAnswers.find(
+        (a) => String(a.questionId || a.question || a.id) === qId
+      );
+
+      const submittedOption = studentAns ? String(studentAns.answer || studentAns.selectedOption || '').trim() : '';
+      const correctOption = String(q.correct_option || '').trim();
+      const isCorrect = submittedOption !== '' && submittedOption === correctOption;
+
+      if (isCorrect) {
+        score += 1;
+      }
+
+      evaluatedAnswers.push({
+        questionId: qId,
+        answer: submittedOption,
+        isCorrect: isCorrect,
+      });
+    }
+
+    const totalQuestions = questions.length;
+    const percentage = totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0;
+
+    // Create QuizAttempt record
+    const attemptData = {
+      student: user.id,
+      quiz: quiz.id || quiz.documentId,
+      score: score,
+      answers: evaluatedAnswers,
+      submitted_at: new Date().toISOString(),
+      publishedAt: new Date().toISOString(),
+    };
+
+    let attempt = null;
+    try {
+      attempt = await strapi.documents('api::quiz-attempt.quiz-attempt').create({
+        data: attemptData,
+      });
+    } catch (err) {
+      try {
+        attempt = await strapi.db.query('api::quiz-attempt.quiz-attempt').create({
+          data: attemptData,
+        });
+      } catch (dbErr) {
+        strapi.log.error('Failed to create quiz attempt:', dbErr?.message || err?.message);
+      }
+    }
+
+    return ctx.send({
+      data: {
+        attemptId: attempt?.documentId || attempt?.id || null,
+        quizId: String(quiz.documentId || quiz.id),
+        quizTitle: quiz.title,
+        score: score,
+        total_questions: totalQuestions,
+        percentage: percentage,
+        submitted_at: attemptData.submitted_at,
+      },
+    });
   },
 }));
