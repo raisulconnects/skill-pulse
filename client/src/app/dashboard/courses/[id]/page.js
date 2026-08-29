@@ -24,6 +24,8 @@ import {
   Sparkles,
   HelpCircle,
   Settings2,
+  History,
+  Users,
 } from "lucide-react";
 
 export default function CourseDetailsPage() {
@@ -603,21 +605,37 @@ export default function CourseDetailsPage() {
 
                           <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
                             {userRole === "student" ? (
-                              <Link
-                                href={`/dashboard/courses/${course?.documentId || courseId}/quizzes/${qId}/take`}
-                                className="inline-flex items-center gap-1.5 text-[12px] font-mono font-bold px-3.5 py-1.5 rounded-[5px] bg-[#1a3300] text-[#fcfaf5] hover:bg-[#1a3300]/90 transition-transform active:scale-[0.98] shadow-xs"
-                              >
-                                <Play className="w-3.5 h-3.5 fill-[#ffe95c] text-[#ffe95c]" />
-                                <span>Start Quiz</span>
-                              </Link>
+                              <>
+                                <Link
+                                  href={`/dashboard/courses/${course?.documentId || courseId}/quizzes/${qId}/history`}
+                                  className="inline-flex items-center gap-1 text-[12px] font-mono font-medium px-3 py-1.5 rounded-[5px] bg-[#ffe95c] border border-[#1a3300]/20 text-[#1a3300] hover:bg-[#ffe95c]/80 transition-colors"
+                                >
+                                  <History className="w-3.5 h-3.5" />
+                                  <span>History</span>
+                                </Link>
+                                <Link
+                                  href={`/dashboard/courses/${course?.documentId || courseId}/quizzes/${qId}/take`}
+                                  className="inline-flex items-center gap-1.5 text-[12px] font-mono font-bold px-3.5 py-1.5 rounded-[5px] bg-[#1a3300] text-[#fcfaf5] hover:bg-[#1a3300]/90 transition-transform active:scale-[0.98] shadow-xs"
+                                >
+                                  <Play className="w-3.5 h-3.5 fill-[#ffe95c] text-[#ffe95c]" />
+                                  <span>Start Quiz</span>
+                                </Link>
+                              </>
                             ) : (
                               <>
                                 <Link
-                                  href={`/dashboard/courses/${course?.documentId || courseId}/quizzes/${qId}/edit`}
+                                  href={`/dashboard/courses/${course?.documentId || courseId}/quizzes/${qId}/results`}
                                   className="inline-flex items-center gap-1 text-[12px] font-mono font-medium px-3 py-1 rounded-[5px] bg-[#d5f5c2] border border-[#1a3300]/20 text-[#1a3300] hover:bg-[#d5f5c2]/80 transition-colors"
                                 >
+                                  <Users className="w-3.5 h-3.5" />
+                                  <span>Student Results</span>
+                                </Link>
+                                <Link
+                                  href={`/dashboard/courses/${course?.documentId || courseId}/quizzes/${qId}/edit`}
+                                  className="inline-flex items-center gap-1 text-[12px] font-mono font-medium px-3 py-1 rounded-[5px] bg-[#1a3300]/5 border border-[#1a3300]/20 text-[#1a3300] hover:bg-[#1a3300]/10 transition-colors"
+                                >
                                   <Settings2 className="w-3 h-3" />
-                                  <span>Manage Questions</span>
+                                  <span>Questions</span>
                                 </Link>
                                 <Link
                                   href={`/dashboard/courses/${course?.documentId || courseId}/quizzes/${qId}/edit`}

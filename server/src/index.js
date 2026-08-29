@@ -53,6 +53,7 @@ module.exports = {
         'api::quiz-attempt.quiz-attempt.find',
         'api::quiz-attempt.quiz-attempt.findOne',
         'api::quiz-attempt.quiz-attempt.create',
+        'api::quiz-attempt.quiz-attempt.getQuizAttemptsForQuiz',
         'plugin::users-permissions.user.find',
         'plugin::users-permissions.user.findOne',
       ];
