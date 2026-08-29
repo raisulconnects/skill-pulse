@@ -1,15 +1,126 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Shield, Users, BookOpen, Settings, UserCheck, ShieldAlert, Sparkles, Activity, ArrowRight } from "lucide-react";
+import {
+  Shield,
+  Users,
+  BookOpen,
+  Settings,
+  Sparkles,
+  ArrowRight,
+  GraduationCap,
+  UserCheck,
+  UserCog,
+  Layers,
+  Award,
+} from "lucide-react";
 import StatCard from "../shared/StatCard";
 import SectionHeader from "../shared/SectionHeader";
-import { MOCK_ADMIN_DATA } from "@/lib/mock-dashboard-data";
 
 export default function AdminDashboard({ user }) {
-  const { stats, userRoleDistribution, recentAuditLogs } = MOCK_ADMIN_DATA;
   const username = user?.username || user?.email?.split("@")[0] || "Administrator";
+
+  const [realStats, setRealStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    setLoading(true);
+    fetch("/api/admin/stats")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.totalUsers !== undefined) {
+          setRealStats(data);
+        } else {
+          setError(data.error?.message || data.error || "Failed to load statistics.");
+        }
+      })
+      .catch((err) => {
+        console.error("Error loading admin stats:", err);
+        setError("An error occurred while fetching platform statistics.");
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const totalUsers = realStats?.totalUsers || 0;
+  const totalStudents = realStats?.totalStudents || 0;
+  const totalInstructors = realStats?.totalInstructors || 0;
+  const totalContentManagers = realStats?.totalContentManagers || 0;
+  const totalAdmins = realStats?.totalAdmins || 0;
+  const totalCourses = realStats?.totalCourses || 0;
+  const totalEnrollments = realStats?.totalEnrollments || 0;
+
+  const getPercentage = (count) => {
+    if (!totalUsers) return "0";
+    return ((count / totalUsers) * 100).toFixed(1);
+  };
+
+  const statCardsData = [
+    {
+      label: "Total Registered Users",
+      value: loading ? "..." : totalUsers.toLocaleString(),
+      trend: "Realtime DB",
+      variant: "accent",
+    },
+    {
+      label: "Total Students",
+      value: loading ? "..." : totalStudents.toLocaleString(),
+      trend: `${getPercentage(totalStudents)}% of users`,
+      variant: "secondary",
+    },
+    {
+      label: "Total Instructors",
+      value: loading ? "..." : totalInstructors.toLocaleString(),
+      trend: `${getPercentage(totalInstructors)}% of users`,
+      variant: "primary",
+    },
+    {
+      label: "Total Content Managers",
+      value: loading ? "..." : totalContentManagers.toLocaleString(),
+      trend: `${getPercentage(totalContentManagers)}% of users`,
+      variant: "default",
+    },
+    {
+      label: "Total Courses",
+      value: loading ? "..." : totalCourses.toLocaleString(),
+      trend: "Platform Catalog",
+      variant: "primary",
+    },
+    {
+      label: "Total Enrollments",
+      value: loading ? "..." : totalEnrollments.toLocaleString(),
+      trend: "Student Learning",
+      variant: "accent",
+    },
+  ];
+
+  const userRoleDistribution = [
+    {
+      role: "Students",
+      count: totalStudents,
+      percentage: getPercentage(totalStudents),
+      color: "bg-[#d5f5c2]",
+    },
+    {
+      role: "Instructors",
+      count: totalInstructors,
+      percentage: getPercentage(totalInstructors),
+      color: "bg-[#ffe95c]",
+    },
+    {
+      role: "Content Managers",
+      count: totalContentManagers,
+      percentage: getPercentage(totalContentManagers),
+      color: "bg-[#a8e5e5]",
+    },
+    {
+      role: "Administrators",
+      count: totalAdmins,
+      percentage: getPercentage(totalAdmins),
+      color: "bg-[#f6d0ff]",
+    },
+  ];
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
@@ -28,7 +139,7 @@ export default function AdminDashboard({ user }) {
               System Overview, <span className="bg-[#f6d0ff] px-2 py-0.5 rounded-[4px]">{username}</span>
             </h1>
             <p className="text-[15px] text-[#1a3300]/80 max-w-[600px]">
-              Platform healthy. <strong className="font-bold text-[#1a3300]">3,850 total accounts</strong> registered across 4 system roles. HTTP-Only Cookie Authentication active.
+              Platform healthy. Real-time system analytics loaded directly from Strapi database.
             </p>
           </div>
 
@@ -40,13 +151,26 @@ export default function AdminDashboard({ user }) {
               <Users className="w-4 h-4 text-[#ffe95c]" />
               <span>User Management</span>
             </Link>
+            <Link
+              href="/dashboard/admin/courses"
+              className="inline-flex items-center justify-center gap-2 bg-[#ffe95c] border border-[#1a3300] text-[#1a3300] px-5 py-3 rounded-[6px] text-[14px] font-bold hover:bg-[#ffe95c]/80 transition-transform active:scale-[0.98] shadow-sm"
+            >
+              <BookOpen className="w-4 h-4 text-[#1a3300]" />
+              <span>Admin Courses</span>
+            </Link>
           </div>
         </div>
       </div>
 
+      {error && (
+        <div className="bg-[#fcd0d0] border border-[#cb5521] rounded-[8px] p-4 text-[#cb5521] text-[14px]">
+          {error}
+        </div>
+      )}
+
       {/* Stats Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((s, idx) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {statCardsData.map((s, idx) => (
           <StatCard
             key={idx}
             label={s.label}
@@ -63,7 +187,7 @@ export default function AdminDashboard({ user }) {
         <div className="lg:col-span-2 space-y-4">
           <SectionHeader
             title="User Role Breakdown"
-            subtitle="Distribution of registered user roles in PostgreSQL"
+            subtitle="Real-time count of registered user roles in PostgreSQL"
             badge="Platform Security"
             badgeBg="bg-[#f6d0ff]"
           />
@@ -79,10 +203,10 @@ export default function AdminDashboard({ user }) {
                     className="text-[20px] font-bold text-[#1a3300] block"
                     style={{ fontFamily: "var(--font-bricolage-grotesque), var(--font-bricolage), sans-serif" }}
                   >
-                    {item.count.toLocaleString()}
+                    {loading ? "..." : item.count.toLocaleString()}
                   </span>
                   <span className="text-[11px] font-mono text-[#1a3300]/70">
-                    {item.percentage}%
+                    {loading ? "..." : `${item.percentage}%`}
                   </span>
                 </div>
               ))}
@@ -98,8 +222,8 @@ export default function AdminDashboard({ user }) {
                 {userRoleDistribution.map((item, idx) => (
                   <div
                     key={idx}
-                    className={`h-full ${item.color} border-r border-[#1a3300]/20 last:border-0`}
-                    style={{ width: `${item.percentage}%` }}
+                    className={`h-full ${item.color} border-r border-[#1a3300]/20 last:border-0 transition-all duration-500`}
+                    style={{ width: `${Math.max(Number(item.percentage) || 0, 2)}%` }}
                     title={`${item.role}: ${item.count} (${item.percentage}%)`}
                   />
                 ))}
@@ -124,87 +248,39 @@ export default function AdminDashboard({ user }) {
                 <Users className="w-4 h-4 text-[#1a3300]" />
                 <div>
                   <span className="font-bold text-[14px] block leading-none mb-0.5">Manage Platform Users</span>
-                  <span className="text-[11px] font-mono text-[#1a3300]/70">Roles, privileges & assignment</span>
+                  <span className="text-[11px] font-mono text-[#1a3300]/70">Roles, privileges & pagination</span>
                 </div>
               </div>
               <ArrowRight className="w-4 h-4 text-[#1a3300]/60" />
             </Link>
 
             <Link
-              href="/dashboard/courses"
+              href="/dashboard/admin/courses"
               className="w-full flex items-center justify-between p-3 rounded-[8px] bg-[#ffe95c]/40 border border-[#1a3300]/20 hover:bg-[#ffe95c]/70 transition-colors text-left"
             >
               <div className="flex items-center gap-3">
                 <BookOpen className="w-4 h-4 text-[#1a3300]" />
                 <div>
-                  <span className="font-bold text-[14px] block leading-none mb-0.5">Course Catalog Audit</span>
-                  <span className="text-[11px] font-mono text-[#1a3300]/70">All platform courses & management</span>
+                  <span className="font-bold text-[14px] block leading-none mb-0.5">Admin Course Management</span>
+                  <span className="text-[11px] font-mono text-[#1a3300]/70">Manage all courses & lessons</span>
                 </div>
               </div>
               <ArrowRight className="w-4 h-4 text-[#1a3300]/60" />
             </Link>
 
-            <button className="w-full flex items-center justify-between p-3 rounded-[8px] bg-[#a8e5e5]/40 border border-[#1a3300]/20 hover:bg-[#a8e5e5]/70 transition-colors text-left">
+            <Link
+              href="/dashboard/courses/create"
+              className="w-full flex items-center justify-between p-3 rounded-[8px] bg-[#a8e5e5]/40 border border-[#1a3300]/20 hover:bg-[#a8e5e5]/70 transition-colors text-left"
+            >
               <div className="flex items-center gap-3">
-                <Settings className="w-4 h-4 text-[#1a3300]" />
+                <Layers className="w-4 h-4 text-[#1a3300]" />
                 <div>
-                  <span className="font-bold text-[14px] block leading-none mb-0.5">System Security & API</span>
-                  <span className="text-[11px] font-mono text-[#1a3300]/70">JWT, HTTP-only cookies, Strapi v5</span>
+                  <span className="font-bold text-[14px] block leading-none mb-0.5">Create Platform Course</span>
+                  <span className="text-[11px] font-mono text-[#1a3300]/70">Publish new learning content</span>
                 </div>
               </div>
               <ArrowRight className="w-4 h-4 text-[#1a3300]/60" />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Audit Log Table */}
-      <div className="space-y-4">
-        <SectionHeader
-          title="System Audit & Security Logs"
-          subtitle="Recent administrative events and registration security enforcement"
-        />
-
-        <div className="bg-[#fcfaf5] border border-[#1a3300]/25 rounded-[12px] overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-[#1a3300]/5 border-b border-[#b6b6b6]/40 text-[11px] font-mono text-[#1a3300]/70 uppercase tracking-wider">
-                  <th className="py-3 px-4 font-bold">User / Initiator</th>
-                  <th className="py-3 px-4 font-bold">System Event</th>
-                  <th className="py-3 px-4 font-bold">Target</th>
-                  <th className="py-3 px-4 font-bold">Timestamp</th>
-                  <th className="py-3 px-4 font-bold text-right">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#b6b6b6]/30 text-[13px]">
-                {recentAuditLogs.map((log, idx) => (
-                  <tr key={idx} className="hover:bg-[#1a3300]/5 transition-colors">
-                    <td className="py-3 px-4 font-mono font-bold text-[#1a3300]">
-                      @{log.user}
-                    </td>
-                    <td className="py-3 px-4 font-medium text-[#1a3300]">
-                      {log.action}
-                    </td>
-                    <td className="py-3 px-4 font-mono text-[12px] text-[#1a3300]/70">
-                      {log.target}
-                    </td>
-                    <td className="py-3 px-4 text-[12px] text-[#1a3300]/70">
-                      {log.timestamp}
-                    </td>
-                    <td className="py-3 px-4 text-right">
-                      <span className={`inline-block text-[11px] font-mono font-bold px-2 py-0.5 rounded-[4px] border border-[#1a3300]/15 ${
-                        log.status.includes("Blocked")
-                          ? "bg-[#cb5521] text-[#fcfaf5]"
-                          : "bg-[#d5f5c2] text-[#1a3300]"
-                      }`}>
-                        {log.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            </Link>
           </div>
         </div>
       </div>

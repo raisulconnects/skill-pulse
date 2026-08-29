@@ -74,7 +74,7 @@ export const DASHBOARD_NAV = {
   ],
   admin: [
     { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
-    { name: "All Courses", href: "/dashboard/courses", icon: BookOpen },
+    { name: "Admin Courses", href: "/dashboard/admin/courses", icon: BookOpen },
     { name: "Create Course", href: "/dashboard/courses/create", icon: PlusCircle },
     { name: "User Management", href: "/dashboard/admin/users", icon: Users },
     { name: "System Settings", href: "#settings", icon: Settings },

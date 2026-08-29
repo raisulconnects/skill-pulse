@@ -57,6 +57,7 @@ module.exports = {
         'plugin::users-permissions.user.find',
         'plugin::users-permissions.user.findOne',
         'plugin::users-permissions.user.update',
+        'api::course.course.getAdminStats',
       ];
 
       // Helper to grant permissions if missing

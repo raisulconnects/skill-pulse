@@ -233,4 +233,49 @@ module.exports = createCoreController('api::course.course', ({ strapi }) => ({
 
     return await super.delete(ctx);
   },
+
+  async getAdminStats(ctx) {
+    const user = ctx.state.user;
+    if (!user) {
+      return ctx.unauthorized('You must be authenticated to view system statistics.');
+    }
+
+    const role = user.user_role;
+    if (role !== 'admin') {
+      return ctx.forbidden('Access denied. Administrator privileges required to access platform statistics.');
+    }
+
+    try {
+      const [
+        totalUsers,
+        totalStudents,
+        totalInstructors,
+        totalContentManagers,
+        totalAdmins,
+        totalCourses,
+        totalEnrollments,
+      ] = await Promise.all([
+        strapi.db.query('plugin::users-permissions.user').count(),
+        strapi.db.query('plugin::users-permissions.user').count({ where: { user_role: 'student' } }),
+        strapi.db.query('plugin::users-permissions.user').count({ where: { user_role: 'instructor' } }),
+        strapi.db.query('plugin::users-permissions.user').count({ where: { user_role: 'content_manager' } }),
+        strapi.db.query('plugin::users-permissions.user').count({ where: { user_role: 'admin' } }),
+        strapi.db.query('api::course.course').count(),
+        strapi.db.query('api::enrollment.enrollment').count(),
+      ]);
+
+      return ctx.send({
+        totalUsers,
+        totalStudents,
+        totalInstructors,
+        totalContentManagers,
+        totalAdmins,
+        totalCourses,
+        totalEnrollments,
+      });
+    } catch (err) {
+      strapi.log.error('Error fetching admin statistics:', err?.message);
+      return ctx.internalServerError('Failed to load platform statistics.');
+    }
+  },
 }));

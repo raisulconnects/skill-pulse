@@ -60,6 +60,8 @@ export default function CreateCoursePage() {
           router.push("/dashboard/my-courses");
         } else if (userRole === "content_manager") {
           router.push("/dashboard/manage-courses");
+        } else if (userRole === "admin") {
+          router.push("/dashboard/admin/courses");
         } else {
           router.push("/dashboard/courses");
         }
