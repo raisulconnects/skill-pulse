@@ -11,7 +11,16 @@ module.exports = createCoreController('api::course.course', ({ strapi }) => ({
     const user = ctx.state.user;
     const role = user?.user_role;
 
-    const query = { ...ctx.query };
+    // Read the mine flag BEFORE we overwrite ctx.query
+    const rawQuery = ctx.query || {};
+    const wantsMine = rawQuery.mine === 'true' || rawQuery.my_courses === 'true';
+
+    const query = { ...rawQuery };
+
+    // Remove custom flags so Strapi core doesn't choke on them
+    delete query.mine;
+    delete query.my_courses;
+
     query.populate = query.populate || {
       instructor: {
         fields: ['id', 'username', 'email', 'user_role'],
@@ -29,13 +38,15 @@ module.exports = createCoreController('api::course.course', ({ strapi }) => ({
         course_status: 'published',
       };
     } else if (role === 'instructor') {
-      // Instructors can query for their own courses
-      if (ctx.query.my_courses === 'true' || ctx.query.mine === 'true') {
+      if (wantsMine) {
+        // Filter to only courses where instructor.id matches the logged-in user
         query.filters = {
           ...(query.filters || {}),
-          instructor: { id: user.id },
+          instructor: { id: { $eq: user.id } },
         };
       }
+      // Without mine=true, instructor still only sees their own + all published
+      // (leave unfiltered so the browse page works)
     }
     // Admins and Content Managers can view all
 
