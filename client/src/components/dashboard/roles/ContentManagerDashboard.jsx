@@ -40,10 +40,13 @@ export default function ContentManagerDashboard({ user }) {
           </div>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            <button className="inline-flex items-center justify-center gap-2 bg-[#1a3300] text-[#fcfaf5] px-5 py-3 rounded-[6px] text-[14px] font-medium hover:bg-[#1a3300]/90 transition-transform active:scale-[0.98] shadow-sm">
+            <Link
+              href="/dashboard/courses/create"
+              className="inline-flex items-center justify-center gap-2 bg-[#1a3300] text-[#fcfaf5] px-5 py-3 rounded-[6px] text-[14px] font-medium hover:bg-[#1a3300]/90 transition-transform active:scale-[0.98] shadow-sm"
+            >
               <PlusCircle className="w-4 h-4 text-[#ffe95c]" />
               <span>Add Platform Content</span>
-            </button>
+            </Link>
           </div>
         </div>
       </div>

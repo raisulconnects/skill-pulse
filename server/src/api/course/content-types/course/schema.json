@@ -47,6 +47,25 @@
       "relation": "oneToMany",
       "target": "api::progress.progress",
       "mappedBy": "course"
+    },
+    "course_status": {
+      "type": "enumeration",
+      "enum": [
+        "draft",
+        "published"
+      ]
+    },
+    "instructor": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "courses"
+    },
+    "category": {
+      "type": "string"
+    },
+    "thumbnail_url": {
+      "type": "string"
     }
   }
 }

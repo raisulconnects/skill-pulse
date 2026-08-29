@@ -113,6 +113,12 @@
       "relation": "oneToMany",
       "target": "api::blog.blog",
       "mappedBy": "author"
+    },
+    "courses": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::course.course",
+      "mappedBy": "instructor"
     }
   }
 }

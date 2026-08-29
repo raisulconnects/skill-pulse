@@ -1,9 +1,223 @@
 'use strict';
 
 /**
- * course controller
+ * Course controller with strict role-based access control and ownership enforcement.
  */
 
 const { createCoreController } = require('@strapi/strapi').factories;
 
-module.exports = createCoreController('api::course.course');
+module.exports = createCoreController('api::course.course', ({ strapi }) => ({
+  async find(ctx) {
+    const user = ctx.state.user;
+    const role = user?.user_role;
+
+    const query = { ...ctx.query };
+    query.populate = query.populate || {
+      instructor: {
+        fields: ['id', 'username', 'email', 'user_role'],
+      },
+      thumbnail: true,
+      enrollments: {
+        populate: { student: { fields: ['id', 'username', 'email'] } },
+      },
+    };
+
+    if (!user || role === 'student') {
+      // Public & students only see published courses
+      query.filters = {
+        ...(query.filters || {}),
+        course_status: 'published',
+      };
+    } else if (role === 'instructor') {
+      // Instructors can query for their own courses
+      if (ctx.query.my_courses === 'true' || ctx.query.mine === 'true') {
+        query.filters = {
+          ...(query.filters || {}),
+          instructor: { id: user.id },
+        };
+      }
+    }
+    // Admins and Content Managers can view all
+
+    ctx.query = query;
+    return await super.find(ctx);
+  },
+
+  async findOne(ctx) {
+    const user = ctx.state.user;
+    const role = user?.user_role;
+
+    ctx.query.populate = ctx.query.populate || {
+      instructor: {
+        fields: ['id', 'username', 'email', 'user_role'],
+      },
+      thumbnail: true,
+      lessons: true,
+      quizzes: true,
+      enrollments: {
+        populate: { student: { fields: ['id', 'username', 'email'] } },
+      },
+    };
+
+    const response = await super.findOne(ctx);
+    if (!response || !response.data) {
+      return response;
+    }
+
+    const course = response.data;
+    const courseStatus = course.course_status || 'published';
+    const instructorId = course.instructor?.id;
+
+    if (!user || role === 'student') {
+      if (courseStatus !== 'published') {
+        return ctx.notFound('Course not found');
+      }
+    } else if (role === 'instructor') {
+      if (courseStatus !== 'published' && instructorId !== user.id) {
+        return ctx.forbidden('You do not have access to view this course');
+      }
+    }
+
+    return response;
+  },
+
+  async create(ctx) {
+    const user = ctx.state.user;
+    if (!user) {
+      return ctx.unauthorized('You must be authenticated to create a course');
+    }
+
+    const role = user.user_role;
+    if (role === 'student') {
+      return ctx.forbidden('Students are not permitted to create courses');
+    }
+
+    const body = ctx.request.body || {};
+    const data = body.data || body;
+
+    // Convert string description to blocks if provided as text
+    if (typeof data.description === 'string') {
+      data.description = [
+        {
+          type: 'paragraph',
+          children: [{ type: 'text', text: data.description }],
+        },
+      ];
+    }
+
+    // Role-specific instructor assignment
+    if (role === 'instructor') {
+      data.instructor = user.id;
+    } else if (role === 'admin' || role === 'content_manager') {
+      data.instructor = data.instructor || user.id;
+    }
+
+    ctx.query.populate = ctx.query.populate || {
+      instructor: { fields: ['id', 'username', 'email', 'user_role'] },
+      thumbnail: true,
+    };
+
+    ctx.request.body = { data };
+    return await super.create(ctx);
+  },
+
+  async update(ctx) {
+    const user = ctx.state.user;
+    if (!user) {
+      return ctx.unauthorized('You must be authenticated to update a course');
+    }
+
+    const role = user.user_role;
+    if (role === 'student') {
+      return ctx.forbidden('Students cannot update courses');
+    }
+
+    const { id } = ctx.params;
+    let existing = null;
+    try {
+      existing = await strapi.documents('api::course.course').findOne({
+        documentId: id,
+        populate: ['instructor'],
+      });
+    } catch {
+      existing = await strapi.db.query('api::course.course').findOne({
+        where: { id },
+        populate: ['instructor'],
+      });
+    }
+
+    if (!existing) {
+      return ctx.notFound('Course not found');
+    }
+
+    if (role === 'instructor') {
+      const instructorId = existing.instructor?.id;
+      if (instructorId !== user.id) {
+        return ctx.forbidden('You can only edit your own courses');
+      }
+    }
+
+    const body = ctx.request.body || {};
+    const data = body.data || body;
+
+    if (typeof data.description === 'string') {
+      data.description = [
+        {
+          type: 'paragraph',
+          children: [{ type: 'text', text: data.description }],
+        },
+      ];
+    }
+
+    if (role === 'instructor') {
+      data.instructor = user.id;
+    }
+
+    ctx.query.populate = ctx.query.populate || {
+      instructor: { fields: ['id', 'username', 'email', 'user_role'] },
+      thumbnail: true,
+    };
+
+    ctx.request.body = { data };
+    return await super.update(ctx);
+  },
+
+  async delete(ctx) {
+    const user = ctx.state.user;
+    if (!user) {
+      return ctx.unauthorized('You must be authenticated to delete a course');
+    }
+
+    const role = user.user_role;
+    if (role === 'student') {
+      return ctx.forbidden('Students cannot delete courses');
+    }
+
+    const { id } = ctx.params;
+    let existing = null;
+    try {
+      existing = await strapi.documents('api::course.course').findOne({
+        documentId: id,
+        populate: ['instructor'],
+      });
+    } catch {
+      existing = await strapi.db.query('api::course.course').findOne({
+        where: { id },
+        populate: ['instructor'],
+      });
+    }
+
+    if (!existing) {
+      return ctx.notFound('Course not found');
+    }
+
+    if (role === 'instructor') {
+      const instructorId = existing.instructor?.id;
+      if (instructorId !== user.id) {
+        return ctx.forbidden('You can only delete your own courses');
+      }
+    }
+
+    return await super.delete(ctx);
+  },
+}));

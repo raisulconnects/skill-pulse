@@ -124,16 +124,19 @@ export default function AdminDashboard({ user }) {
               <ArrowRight className="w-4 h-4 text-[#1a3300]/60" />
             </button>
 
-            <button className="w-full flex items-center justify-between p-3 rounded-[8px] bg-[#ffe95c]/40 border border-[#1a3300]/20 hover:bg-[#ffe95c]/70 transition-colors text-left">
+            <Link
+              href="/dashboard/courses"
+              className="w-full flex items-center justify-between p-3 rounded-[8px] bg-[#ffe95c]/40 border border-[#1a3300]/20 hover:bg-[#ffe95c]/70 transition-colors text-left"
+            >
               <div className="flex items-center gap-3">
                 <BookOpen className="w-4 h-4 text-[#1a3300]" />
                 <div>
                   <span className="font-bold text-[14px] block leading-none mb-0.5">Course Catalog Audit</span>
-                  <span className="text-[11px] font-mono text-[#1a3300]/70">All 24 active courses</span>
+                  <span className="text-[11px] font-mono text-[#1a3300]/70">All platform courses & management</span>
                 </div>
               </div>
               <ArrowRight className="w-4 h-4 text-[#1a3300]/60" />
-            </button>
+            </Link>
 
             <button className="w-full flex items-center justify-between p-3 rounded-[8px] bg-[#a8e5e5]/40 border border-[#1a3300]/20 hover:bg-[#a8e5e5]/70 transition-colors text-left">
               <div className="flex items-center gap-3">

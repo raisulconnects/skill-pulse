@@ -117,7 +117,7 @@ export default function StudentDashboard({ user }) {
             title="My Enrolled Courses"
             subtitle="Courses you are currently learning"
             actionText="Browse All"
-            actionHref="#browse"
+            actionHref="/dashboard/courses"
           />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

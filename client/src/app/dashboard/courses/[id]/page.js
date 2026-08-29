@@ -1,0 +1,338 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
+import DashboardShell from "@/components/dashboard/shell/DashboardShell";
+import {
+  BookOpen,
+  User,
+  Clock,
+  CheckCircle2,
+  ArrowLeft,
+  ArrowRight,
+  Sparkles,
+  Edit3,
+  Calendar,
+  Layers,
+  GraduationCap,
+} from "lucide-react";
+
+export default function CourseDetailsPage() {
+  const params = useParams();
+  const router = useRouter();
+  const { user, isLoading: authLoading } = useAuth();
+
+  const courseId = params?.id;
+
+  const [course, setCourse] = useState(null);
+  const [isEnrolled, setIsEnrolled] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [enrolling, setEnrolling] = useState(false);
+  const [error, setError] = useState("");
+
+  const userRole = user?.user_role || "student";
+
+  const loadCourseData = async () => {
+    if (!courseId) return;
+    setLoading(true);
+    setError("");
+
+    try {
+      // 1. Fetch course details
+      const res = await fetch(`/api/courses/${courseId}`);
+      const data = await res.json();
+
+      if (!res.ok || !data.data) {
+        setError(data.error?.message || data.error || "Course not found.");
+        setLoading(false);
+        return;
+      }
+
+      const courseData = data.data;
+      setCourse(courseData);
+
+      // 2. Check if student is already enrolled
+      if (user && userRole === "student") {
+        const resEnroll = await fetch("/api/enrollments");
+        const dataEnroll = await resEnroll.json();
+        const enrollList = Array.isArray(dataEnroll.data) ? dataEnroll.data : (Array.isArray(dataEnroll) ? dataEnroll : []);
+        const enrolled = enrollList.some((en) => {
+          const cId = en.course?.documentId || en.course?.id || en.course;
+          return String(cId) === String(courseData.documentId) || String(cId) === String(courseData.id) || String(cId) === String(courseId);
+        });
+        setIsEnrolled(enrolled);
+      }
+    } catch (err) {
+      console.error("Error loading course:", err);
+      setError("Failed to load course details.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!authLoading) {
+      loadCourseData();
+    }
+  }, [courseId, authLoading, user]);
+
+  const handleEnroll = async () => {
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+
+    setEnrolling(true);
+    try {
+      const res = await fetch("/api/enrollments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ course: course.documentId || course.id }),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        setIsEnrolled(true);
+      } else {
+        alert(data.error?.message || data.error || "Failed to enroll.");
+      }
+    } catch (err) {
+      console.error("Enrollment error:", err);
+      alert("An unexpected error occurred during enrollment.");
+    } finally {
+      setEnrolling(false);
+    }
+  };
+
+  // Extract description text if blocks
+  let descriptionText = "";
+  if (typeof course?.description === "string") {
+    descriptionText = course.description;
+  } else if (Array.isArray(course?.description)) {
+    descriptionText = course.description
+      .map((block) => block?.children?.map((c) => c.text).join("") || "")
+      .join("\n\n");
+  }
+
+  const instructorName = course?.instructor?.username || "SkillPulse Instructor";
+  const instructorEmail = course?.instructor?.email || "faculty@skillpulse.dev";
+  const lessons = Array.isArray(course?.lessons) ? course.lessons : [];
+  const enrollmentsCount = Array.isArray(course?.enrollments) ? course.enrollments.length : 0;
+
+  return (
+    <DashboardShell userRole={userRole}>
+      <div className="space-y-6 max-w-[1000px] animate-in fade-in duration-200">
+        {/* Breadcrumbs & Navigation */}
+        <div className="flex items-center justify-between gap-4">
+          <Link
+            href="/dashboard/courses"
+            className="inline-flex items-center gap-1.5 text-[13px] font-mono text-[#1a3300]/70 hover:text-[#1a3300] transition-colors"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Back to All Courses</span>
+          </Link>
+
+          {(userRole === "admin" || userRole === "content_manager" || (userRole === "instructor" && course?.instructor?.id === user?.id)) && (
+            <Link
+              href={`/dashboard/courses/${course?.documentId || courseId}/edit`}
+              className="inline-flex items-center gap-1.5 bg-[#ffe95c] border border-[#1a3300]/20 text-[#1a3300] px-4 py-1.5 rounded-[6px] text-[13px] font-medium hover:bg-[#ffe95c]/80 transition-colors"
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+              <span>Edit Course</span>
+            </Link>
+          )}
+        </div>
+
+        {loading ? (
+          <div className="py-20 text-center text-[#1a3300]">
+            <div className="w-8 h-8 border-3 border-[#1a3300] border-t-[#ffe95c] rounded-full animate-spin mx-auto mb-3" />
+            <p className="font-mono text-[13px] text-[#1a3300]/70">Loading course curriculum...</p>
+          </div>
+        ) : error || !course ? (
+          <div className="bg-[#fcd0d0] border-2 border-[#cb5521] rounded-[12px] p-6 text-center text-[#cb5521]">
+            <h3 className="font-bold text-[18px] mb-1">Course Unavailable</h3>
+            <p className="text-[14px] mb-4">{error || "The requested course could not be loaded."}</p>
+            <Link
+              href="/dashboard/courses"
+              className="inline-block bg-[#1a3300] text-[#fcfaf5] px-4 py-2 rounded-[6px] text-[13px]"
+            >
+              Return to Catalog
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {/* Course Hero Banner */}
+            <div className="bg-[#fcfaf5] border-2 border-[#1a3300] rounded-[16px] p-6 sm:p-8 shadow-[rgba(0,0,0,0.05)_0px_4px_12px] relative overflow-hidden">
+              <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
+                <div className="space-y-3 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[11px] font-mono font-medium px-2.5 py-0.5 rounded-[4px] bg-[#d5f5c2] border border-[#1a3300]/20 text-[#1a3300] uppercase tracking-wider">
+                      {course.category || "Web Development"}
+                    </span>
+                    <span className="text-[11px] font-mono font-medium px-2.5 py-0.5 rounded-[4px] bg-[#ffe95c] border border-[#1a3300]/20 text-[#1a3300] uppercase tracking-wider">
+                      {course.course_status || "Published"}
+                    </span>
+                  </div>
+
+                  <h1
+                    className="text-[28px] sm:text-[36px] font-[800] text-[#1a3300] leading-tight"
+                    style={{ fontFamily: "var(--font-bricolage-grotesque), var(--font-bricolage), sans-serif" }}
+                  >
+                    {course.title}
+                  </h1>
+
+                  <div className="flex items-center gap-4 text-[13px] font-mono text-[#1a3300]/75 flex-wrap pt-1">
+                    <span className="flex items-center gap-1.5">
+                      <User className="w-4 h-4 text-[#1a3300]" />
+                      Instructor: <strong className="text-[#1a3300]">{instructorName}</strong>
+                    </span>
+                    {enrollmentsCount > 0 && (
+                      <span className="flex items-center gap-1.5">
+                        <GraduationCap className="w-4 h-4 text-[#1a3300]" />
+                        {enrollmentsCount} Enrolled
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Enrollment Card Widget */}
+                <div className="w-full md:w-64 bg-[#fcfaf5] border border-[#1a3300]/30 rounded-[12px] p-5 shrink-0 shadow-sm flex flex-col justify-between">
+                  <div className="mb-4">
+                    <span className="text-[11px] font-mono text-[#1a3300]/60 uppercase block mb-1">
+                      Enrollment Status
+                    </span>
+                    <span
+                      className="text-[20px] font-bold text-[#1a3300] block leading-none"
+                      style={{ fontFamily: "var(--font-bricolage-grotesque), var(--font-bricolage), sans-serif" }}
+                    >
+                      {isEnrolled ? "Enrolled ✓" : "Open for Learning"}
+                    </span>
+                  </div>
+
+                  {userRole === "student" ? (
+                    isEnrolled ? (
+                      <div className="space-y-2">
+                        <div className="w-full text-center bg-[#d5f5c2] border border-[#1a3300]/20 text-[#1a3300] py-2.5 rounded-[6px] font-mono text-[13px] font-bold">
+                          Enrolled ✓
+                        </div>
+                        <Link
+                          href="/dashboard/my-learning"
+                          className="block text-center text-[12px] font-mono text-[#1a3300]/70 hover:text-[#1a3300] underline"
+                        >
+                          Go to My Learning →
+                        </Link>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={handleEnroll}
+                        disabled={enrolling}
+                        className="w-full inline-flex items-center justify-center gap-2 bg-[#1a3300] text-[#fcfaf5] py-3 rounded-[6px] text-[14px] font-medium hover:bg-[#1a3300]/90 transition-transform active:scale-[0.98] shadow-sm disabled:opacity-50"
+                      >
+                        <span>{enrolling ? "Enrolling..." : "Enroll in Course"}</span>
+                        <ArrowRight className="w-4 h-4 text-[#ffe95c]" />
+                      </button>
+                    )
+                  ) : (
+                    <div className="text-[12px] font-mono text-[#1a3300]/70 bg-[#1a3300]/5 p-2.5 rounded-[6px] text-center border border-[#1a3300]/10">
+                      Role: {userRole} (Management Mode)
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Course Overview & Description */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Left 2 Cols: Description & Syllabus */}
+              <div className="md:col-span-2 space-y-6">
+                <div className="bg-[#fcfaf5] border border-[#1a3300]/25 rounded-[12px] p-6 shadow-sm">
+                  <h3
+                    className="text-[20px] font-bold text-[#1a3300] mb-4 pb-2 border-b border-[#b6b6b6]/30"
+                    style={{ fontFamily: "var(--font-bricolage-grotesque), var(--font-bricolage), sans-serif" }}
+                  >
+                    About this Course
+                  </h3>
+
+                  <div className="text-[15px] text-[#1a3300]/85 leading-relaxed whitespace-pre-line">
+                    {descriptionText || "No description provided for this course yet."}
+                  </div>
+                </div>
+
+                {/* Course Modules / Lessons Preview */}
+                <div className="bg-[#fcfaf5] border border-[#1a3300]/25 rounded-[12px] p-6 shadow-sm">
+                  <div className="flex items-center justify-between mb-4 pb-2 border-b border-[#b6b6b6]/30">
+                    <h3
+                      className="text-[20px] font-bold text-[#1a3300]"
+                      style={{ fontFamily: "var(--font-bricolage-grotesque), var(--font-bricolage), sans-serif" }}
+                    >
+                      Curriculum Syllabus
+                    </h3>
+                    <span className="text-[12px] font-mono text-[#1a3300]/60">
+                      {lessons.length} {lessons.length === 1 ? "Lesson" : "Lessons"}
+                    </span>
+                  </div>
+
+                  {lessons.length === 0 ? (
+                    <p className="text-[14px] text-[#1a3300]/60 font-mono py-2">
+                      Lesson modules will be attached as this course progresses.
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {lessons.map((lesson, idx) => (
+                        <div
+                          key={lesson.id || idx}
+                          className="flex items-center justify-between p-3 rounded-[8px] bg-[#fcfaf5] border border-[#1a3300]/15"
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="font-mono text-[12px] font-bold text-[#1a3300]/60">
+                              0{idx + 1}
+                            </span>
+                            <span className="font-medium text-[14px] text-[#1a3300]">
+                              {lesson.title || `Lesson ${idx + 1}`}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Right 1 Col: Instructor Bio */}
+              <div className="space-y-4">
+                <div className="bg-[#fcfaf5] border border-[#1a3300]/25 rounded-[12px] p-5 shadow-sm">
+                  <h4
+                    className="text-[16px] font-bold text-[#1a3300] mb-3 pb-2 border-b border-[#b6b6b6]/30"
+                    style={{ fontFamily: "var(--font-bricolage-grotesque), var(--font-bricolage), sans-serif" }}
+                  >
+                    Course Instructor
+                  </h4>
+
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-full bg-[#ffe95c] border border-[#1a3300]/20 flex items-center justify-center font-mono font-bold text-[15px] text-[#1a3300]">
+                      {instructorName[0]?.toUpperCase()}
+                    </div>
+                    <div>
+                      <span className="font-bold text-[15px] text-[#1a3300] block">
+                        {instructorName}
+                      </span>
+                      <span className="text-[12px] font-mono text-[#1a3300]/60 block">
+                        {instructorEmail}
+                      </span>
+                    </div>
+                  </div>
+
+                  <p className="text-[13px] text-[#1a3300]/75 leading-relaxed">
+                    Lead educator at SkillPulse specializing in hands-on, modern engineering curricula.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </DashboardShell>
+  );
+}

@@ -33,10 +33,13 @@ export default function InstructorDashboard({ user }) {
           </div>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            <button className="inline-flex items-center justify-center gap-2 bg-[#1a3300] text-[#fcfaf5] px-5 py-3 rounded-[6px] text-[14px] font-medium hover:bg-[#1a3300]/90 transition-transform active:scale-[0.98] shadow-sm">
+            <Link
+              href="/dashboard/courses/create"
+              className="inline-flex items-center justify-center gap-2 bg-[#1a3300] text-[#fcfaf5] px-5 py-3 rounded-[6px] text-[14px] font-medium hover:bg-[#1a3300]/90 transition-transform active:scale-[0.98] shadow-sm"
+            >
               <PlusCircle className="w-4 h-4 text-[#ffe95c]" />
               <span>Create New Course</span>
-            </button>
+            </Link>
           </div>
         </div>
       </div>
@@ -61,8 +64,8 @@ export default function InstructorDashboard({ user }) {
           subtitle="Manage your course content, student rosters, and publish statuses"
           badge="Instructor Content"
           badgeBg="bg-[#ffe95c]"
-          actionText="Create Course"
-          onActionClick={() => {}}
+          actionText="Manage All"
+          actionHref="/dashboard/my-courses"
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

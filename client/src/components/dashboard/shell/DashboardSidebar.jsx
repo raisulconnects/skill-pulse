@@ -2,28 +2,21 @@
 
 import React from "react";
 import Link from "next/link";
-import { X, Sparkles, LogOut, ChevronRight } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { X, LogOut, ChevronRight } from "lucide-react";
 import { DASHBOARD_NAV, ROLE_CONFIG } from "@/lib/dashboard-nav";
 import { useAuth } from "@/context/AuthContext";
 
 export default function DashboardSidebar({
   userRole = "student",
-  activeNav = "Overview",
-  setActiveNav,
   mobileOpen = false,
   setMobileOpen = () => {},
 }) {
   const { user, logout } = useAuth();
+  const pathname = usePathname();
   const navItems = DASHBOARD_NAV[userRole] || DASHBOARD_NAV.student;
   const roleConfig = ROLE_CONFIG[userRole] || ROLE_CONFIG.student;
   const RoleIcon = roleConfig.icon;
-
-  const handleNavClick = (item) => {
-    if (setActiveNav) {
-      setActiveNav(item.name);
-    }
-    setMobileOpen(false);
-  };
 
   const sidebarContent = (
     <div className="flex flex-col h-full bg-[#fcfaf5] border-r border-[#b6b6b6]/40 p-4">
@@ -75,12 +68,13 @@ export default function DashboardSidebar({
         </span>
         {navItems.map((item) => {
           const ItemIcon = item.icon;
-          const isActive = activeNav === item.name;
+          const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname?.startsWith(item.href));
 
           return (
-            <button
+            <Link
               key={item.name}
-              onClick={() => handleNavClick(item)}
+              href={item.href}
+              onClick={() => setMobileOpen(false)}
               className={`w-full flex items-center justify-between px-3 py-2.5 rounded-[8px] text-[14px] font-medium transition-all ${
                 isActive
                   ? "bg-[#1a3300] text-[#fcfaf5] shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px]"
@@ -105,7 +99,7 @@ export default function DashboardSidebar({
               ) : (
                 <ChevronRight className={`w-3.5 h-3.5 ${isActive ? "text-[#fcfaf5]/60" : "text-[#1a3300]/30"}`} />
               )}
-            </button>
+            </Link>
           );
         })}
       </div>
