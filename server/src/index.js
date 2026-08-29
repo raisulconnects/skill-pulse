@@ -56,6 +56,7 @@ module.exports = {
         'api::quiz-attempt.quiz-attempt.getQuizAttemptsForQuiz',
         'plugin::users-permissions.user.find',
         'plugin::users-permissions.user.findOne',
+        'plugin::users-permissions.user.update',
       ];
 
       // Helper to grant permissions if missing

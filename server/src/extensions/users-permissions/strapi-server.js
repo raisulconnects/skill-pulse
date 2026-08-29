@@ -3,54 +3,87 @@
 /**
  * users-permissions Strapi v5 extension.
  *
- * Intercepts the public registration endpoint (POST /api/auth/local/register)
- * and validates that `user_role` is either "student" or "instructor" before
- * allowing the original Strapi registration logic to run.
- *
- * In Strapi v5, plugin.controllers.auth is a FACTORY function of the form:
- *   ({ strapi }) => ({ register: async (ctx) => { ... }, ... })
- *
- * We must wrap that factory — not the already-instantiated method — so that
- * our validation runs every time the controller is resolved.
+ * 1. Intercepts the public registration endpoint (POST /api/auth/local/register)
+ *    and validates that `user_role` is either "student" or "instructor".
+ * 2. Intercepts user endpoints (GET /api/users, PUT /api/users/:id)
+ *    and enforces that only Admin users (user_role === 'admin') can access or update roles.
  */
 module.exports = (plugin) => {
-  // Store the original controller factory.
+  // 1. Override Auth Controller Factory for Public Registration Validation
   const originalAuthFactory = plugin.controllers.auth;
 
-  // Replace it with a new factory that wraps the original.
-  plugin.controllers.auth = ({ strapi }) => {
-    // Instantiate the original controller by calling its factory.
-    const original = originalAuthFactory({ strapi });
+  if (originalAuthFactory) {
+    plugin.controllers.auth = ({ strapi }) => {
+      const original = originalAuthFactory({ strapi });
 
-    return {
-      // Spread all original methods (callback, forgotPassword, etc.).
-      ...original,
+      return {
+        ...original,
 
-      // Override only the register action.
-      async register(ctx) {
-        const { user_role } = ctx.request.body || {};
+        async register(ctx) {
+          const { user_role } = ctx.request.body || {};
 
-        const ALLOWED_PUBLIC_ROLES = ['student', 'instructor'];
+          const ALLOWED_PUBLIC_ROLES = ['student', 'instructor'];
 
-        // Reject missing role.
-        if (!user_role) {
-          return ctx.badRequest(
-            'Registration role is required. Please select either "student" or "instructor".'
-          );
-        }
+          if (!user_role) {
+            return ctx.badRequest(
+              'Registration role is required. Please select either "student" or "instructor".'
+            );
+          }
 
-        // Reject any role that is not in the public-allowed list.
-        if (!ALLOWED_PUBLIC_ROLES.includes(user_role)) {
-          return ctx.badRequest(
-            'Invalid registration role. Only "student" and "instructor" roles are allowed for public registration.'
-          );
-        }
+          if (!ALLOWED_PUBLIC_ROLES.includes(user_role)) {
+            return ctx.badRequest(
+              'Invalid registration role. Only "student" and "instructor" roles are allowed for public registration.'
+            );
+          }
 
-        // Role is valid — delegate to the original Strapi registration logic.
-        return original.register(ctx);
-      },
+          return original.register(ctx);
+        },
+      };
     };
-  };
+  }
+
+  // 2. Override User Controller Methods for Admin User & Role Management
+  const userController = plugin.controllers.user;
+
+  if (userController) {
+    const originalFind = userController.find;
+    const originalFindOne = userController.findOne;
+    const originalUpdate = userController.update;
+
+    userController.find = async (ctx) => {
+      const user = ctx.state.user;
+      if (!user || user.user_role !== 'admin') {
+        return ctx.forbidden('Access denied. Administrator privileges required to list platform users.');
+      }
+      return originalFind(ctx);
+    };
+
+    userController.findOne = async (ctx) => {
+      const user = ctx.state.user;
+      if (!user || user.user_role !== 'admin') {
+        return ctx.forbidden('Access denied. Administrator privileges required to view user details.');
+      }
+      return originalFindOne(ctx);
+    };
+
+    userController.update = async (ctx) => {
+      const user = ctx.state.user;
+      if (!user || user.user_role !== 'admin') {
+        return ctx.forbidden('Access denied. Administrator privileges required to update user roles.');
+      }
+
+      const ALLOWED_ROLES = ['admin', 'content_manager', 'instructor', 'student'];
+      const body = ctx.request.body || {};
+
+      if (body.user_role && !ALLOWED_ROLES.includes(body.user_role)) {
+        return ctx.badRequest(
+          `Invalid user_role "${body.user_role}". Allowed roles: ${ALLOWED_ROLES.join(', ')}`
+        );
+      }
+
+      return originalUpdate(ctx);
+    };
+  }
 
   return plugin;
 };
