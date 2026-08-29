@@ -1,8 +1,22 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import Link from "next/link";
-import { BookOpen, Video, Hash, FileText, ArrowLeft, Save } from "lucide-react";
+import {
+  BookOpen,
+  Video,
+  Hash,
+  ArrowLeft,
+  Save,
+  Upload,
+  CheckCircle2,
+  AlertCircle,
+  X,
+  RefreshCw,
+  Link as LinkIcon,
+  CloudUpload,
+  FileVideo,
+} from "lucide-react";
 
 export default function LessonForm({
   initialData = {},
@@ -31,6 +45,14 @@ export default function LessonForm({
 
   const [errors, setErrors] = useState({});
 
+  // Video Upload States
+  const [uploadMode, setUploadMode] = useState("file"); // "file" or "url"
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadError, setUploadError] = useState("");
+  const [uploadedFileName, setUploadedFileName] = useState("");
+  const fileInputRef = useRef(null);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -39,11 +61,66 @@ export default function LessonForm({
     }
   };
 
+  const handleVideoFileSelect = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("video/")) {
+      setUploadError("Please select a valid video file (.mp4, .mov, .webm, .avi, .mkv).");
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadError("");
+    setUploadProgress(20);
+    setUploadedFileName(file.name);
+
+    try {
+      const data = new FormData();
+      data.append("file", file);
+
+      setUploadProgress(45);
+
+      const res = await fetch("/api/upload/video", {
+        method: "POST",
+        body: data,
+      });
+
+      setUploadProgress(85);
+
+      const result = await res.json();
+
+      if (res.ok && result.url) {
+        setFormData((prev) => ({ ...prev, video_url: result.url }));
+        setUploadProgress(100);
+      } else {
+        setUploadError(result.error || result.details || "Failed to upload video to Cloudinary.");
+        setUploadedFileName("");
+      }
+    } catch (err) {
+      console.error("Upload error:", err);
+      setUploadError("Network or server error during video upload.");
+      setUploadedFileName("");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleRemoveVideo = () => {
+    setFormData((prev) => ({ ...prev, video_url: "" }));
+    setUploadedFileName("");
+    setUploadError("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   const validate = () => {
     const errs = {};
     if (!formData.title.trim()) errs.title = "Lesson title is required.";
     if (formData.lesson_order === "" || isNaN(formData.lesson_order)) {
-      errs.lesson_order = "Valid lesson order is required.";
+      errs.lesson_order = "Valid lesson order index is required.";
     }
     if (!formData.description.trim()) errs.description = "Lesson description is required.";
 
@@ -61,6 +138,8 @@ export default function LessonForm({
       course: courseId,
     });
   };
+
+  const hasVideoUrl = !!formData.video_url?.trim();
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-[800px]">
@@ -138,34 +217,170 @@ export default function LessonForm({
           </div>
         </div>
 
-        {/* Video URL (Optional) */}
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <label className="block text-[13px] font-medium text-[#1a3300]">
-              Video URL <span className="text-[#1a3300]/50 font-normal">(Optional)</span>
-            </label>
-            <span className="text-[11px] font-mono text-[#1a3300]/60">
-              YouTube, MP4, or Video Embed Link
-            </span>
+        {/* Video Upload / URL Section */}
+        <div className="space-y-2.5 pt-2 border-t border-[#b6b6b6]/30">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <label className="block text-[13px] font-medium text-[#1a3300]">
+                Lesson Video <span className="text-[#1a3300]/50 font-normal">(Optional)</span>
+              </label>
+              <p className="text-[11px] font-mono text-[#1a3300]/60">
+                Upload a video file to Cloudinary or provide a direct video link
+              </p>
+            </div>
+
+            {/* Mode Selector Tabs */}
+            <div className="flex items-center gap-1 bg-[#1a3300]/5 border border-[#1a3300]/15 p-1 rounded-[6px] self-start sm:self-auto font-mono text-[11px]">
+              <button
+                type="button"
+                onClick={() => setUploadMode("file")}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-[4px] font-medium transition-colors ${
+                  uploadMode === "file"
+                    ? "bg-[#1a3300] text-[#fcfaf5]"
+                    : "text-[#1a3300]/70 hover:text-[#1a3300]"
+                }`}
+              >
+                <CloudUpload className="w-3 h-3" />
+                <span>Upload Video</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setUploadMode("url")}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-[4px] font-medium transition-colors ${
+                  uploadMode === "url"
+                    ? "bg-[#1a3300] text-[#fcfaf5]"
+                    : "text-[#1a3300]/70 hover:text-[#1a3300]"
+                }`}
+              >
+                <LinkIcon className="w-3 h-3" />
+                <span>Video URL</span>
+              </button>
+            </div>
           </div>
-          <div className="relative">
-            <Video className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#1a3300]/50" />
-            <input
-              type="url"
-              name="video_url"
-              value={formData.video_url}
-              onChange={handleChange}
-              placeholder="https://www.youtube.com/watch?v=... or https://cdn.example.com/video.mp4"
-              className="w-full bg-[#fcfaf5] border border-[#1a3300]/30 rounded-[8px] pl-9 pr-3 py-2.5 text-[14px] text-[#1a3300] focus:outline-none focus:border-[#1a3300] transition-colors placeholder:text-[#1a3300]/35 font-mono text-[13px]"
-            />
-          </div>
-          <p className="text-[11px] text-[#1a3300]/60 font-mono">
-            Leave blank if this lesson is text/reading material only.
-          </p>
+
+          {/* Existing Video Attached Badge */}
+          {hasVideoUrl && (
+            <div className="bg-[#d5f5c2]/40 border border-[#1a3300]/20 rounded-[10px] p-3.5 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-8 h-8 rounded-full bg-[#1a3300] text-[#ffe95c] flex items-center justify-center shrink-0">
+                  <Video className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[12px] font-mono font-bold text-[#1a3300]">
+                      Video Attached ✓
+                    </span>
+                    {uploadedFileName && (
+                      <span className="text-[11px] font-mono text-[#1a3300]/60 truncate">
+                        ({uploadedFileName})
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] font-mono text-[#1a3300]/70 truncate max-w-[450px]">
+                    {formData.video_url}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="px-2.5 py-1 text-[11px] font-mono font-medium text-[#1a3300] bg-[#fcfaf5] border border-[#1a3300]/30 rounded-[5px] hover:bg-[#ffe95c] transition-colors flex items-center gap-1"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                  <span>Replace</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleRemoveVideo}
+                  className="px-2.5 py-1 text-[11px] font-mono font-medium text-[#cb5521] bg-[#fcd0d0]/50 border border-[#cb5521]/30 rounded-[5px] hover:bg-[#fcd0d0] transition-colors flex items-center gap-1"
+                >
+                  <X className="w-3 h-3" />
+                  <span>Remove</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Upload File Input Area */}
+          {uploadMode === "file" && (
+            <div className="space-y-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="video/mp4,video/quicktime,video/webm,video/x-msvideo,video/mkv"
+                onChange={handleVideoFileSelect}
+                disabled={isUploading}
+                className="hidden"
+                id="cloudinary-video-input"
+              />
+
+              <label
+                htmlFor="cloudinary-video-input"
+                className={`flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-[12px] cursor-pointer transition-all ${
+                  isUploading
+                    ? "border-[#1a3300]/30 bg-[#1a3300]/5 cursor-not-allowed"
+                    : "border-[#1a3300]/30 bg-[#fcfaf5] hover:border-[#1a3300] hover:bg-[#1a3300]/5"
+                }`}
+              >
+                {isUploading ? (
+                  <div className="flex flex-col items-center space-y-2 py-2">
+                    <div className="w-8 h-8 border-3 border-[#1a3300] border-t-[#ffe95c] rounded-full animate-spin" />
+                    <span className="text-[13px] font-mono font-bold text-[#1a3300]">
+                      Uploading video to Cloudinary... ({uploadProgress}%)
+                    </span>
+                    <p className="text-[11px] font-mono text-[#1a3300]/60">
+                      Processing video file. Please wait...
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center space-y-1.5 text-center">
+                    <div className="w-10 h-10 rounded-full bg-[#ffe95c] border border-[#1a3300]/20 flex items-center justify-center text-[#1a3300] mb-1">
+                      <CloudUpload className="w-5 h-5" />
+                    </div>
+                    <span className="text-[14px] font-bold text-[#1a3300]">
+                      {hasVideoUrl ? "Click to Replace Video File" : "Click or Drag to Upload Lesson Video"}
+                    </span>
+                    <span className="text-[11px] font-mono text-[#1a3300]/60">
+                      Supports MP4, MOV, WEBM, AVI (Cloudinary hosted)
+                    </span>
+                  </div>
+                )}
+              </label>
+
+              {uploadError && (
+                <div className="bg-[#fcd0d0] border border-[#cb5521] rounded-[8px] p-3 flex items-center gap-2 text-[#cb5521] text-[13px]">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span className="font-mono text-[12px]">{uploadError}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Manual URL Input Area */}
+          {uploadMode === "url" && (
+            <div className="space-y-1.5">
+              <div className="relative">
+                <Video className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#1a3300]/50" />
+                <input
+                  type="url"
+                  name="video_url"
+                  value={formData.video_url}
+                  onChange={handleChange}
+                  placeholder="https://res.cloudinary.com/... or https://www.youtube.com/watch?v=..."
+                  className="w-full bg-[#fcfaf5] border border-[#1a3300]/30 rounded-[8px] pl-9 pr-3 py-2.5 text-[14px] text-[#1a3300] focus:outline-none focus:border-[#1a3300] transition-colors font-mono text-[13px]"
+                />
+              </div>
+              <p className="text-[11px] text-[#1a3300]/60 font-mono">
+                Paste a Cloudinary video URL or YouTube/Vimeo video embed link.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Description / Content */}
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 pt-2 border-t border-[#b6b6b6]/30">
           <label className="block text-[13px] font-medium text-[#1a3300]">
             Lesson Content / Description <span className="text-[#cb5521]">*</span>
           </label>
@@ -195,7 +410,7 @@ export default function LessonForm({
         </Link>
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isSubmitting || isUploading}
           className="inline-flex items-center gap-2 bg-[#1a3300] text-[#fcfaf5] px-6 py-2.5 rounded-[6px] text-[14px] font-medium hover:bg-[#1a3300]/90 transition-transform active:scale-[0.98] shadow-sm disabled:opacity-50"
         >
           {isSubmitting ? (
