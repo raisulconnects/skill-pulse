@@ -17,12 +17,16 @@
     "description": {
       "type": "blocks"
     },
-    "statuss": {
+    "post_status": {
       "type": "enumeration",
       "enum": [
         "draft",
         "published"
-      ]
+      ],
+      "default": "draft"
+    },
+    "cover_image_url": {
+      "type": "string"
     },
     "cover_image": {
       "type": "media",

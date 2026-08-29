@@ -14,6 +14,7 @@ import {
   UserCog,
   Layers,
   Award,
+  FileText,
 } from "lucide-react";
 import StatCard from "../shared/StatCard";
 import SectionHeader from "../shared/SectionHeader";
@@ -269,14 +270,14 @@ export default function AdminDashboard({ user }) {
             </Link>
 
             <Link
-              href="/dashboard/courses/create"
-              className="w-full flex items-center justify-between p-3 rounded-[8px] bg-[#a8e5e5]/40 border border-[#1a3300]/20 hover:bg-[#a8e5e5]/70 transition-colors text-left"
+              href="/dashboard/blog"
+              className="w-full flex items-center justify-between p-3 rounded-[8px] bg-[#f6d0ff]/40 border border-[#1a3300]/20 hover:bg-[#f6d0ff]/70 transition-colors text-left"
             >
               <div className="flex items-center gap-3">
-                <Layers className="w-4 h-4 text-[#1a3300]" />
+                <FileText className="w-4 h-4 text-[#1a3300]" />
                 <div>
-                  <span className="font-bold text-[14px] block leading-none mb-0.5">Create Platform Course</span>
-                  <span className="text-[11px] font-mono text-[#1a3300]/70">Publish new learning content</span>
+                  <span className="font-bold text-[14px] block leading-none mb-0.5">Blog CMS & Authoring</span>
+                  <span className="text-[11px] font-mono text-[#1a3300]/70">Draft, publish & edit platform posts</span>
                 </div>
               </div>
               <ArrowRight className="w-4 h-4 text-[#1a3300]/60" />

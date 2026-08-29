@@ -16,6 +16,8 @@ module.exports = {
       const publicActions = [
         'api::course.course.find',
         'api::course.course.findOne',
+        'api::blog.blog.find',
+        'api::blog.blog.findOne',
       ];
 
       const authenticatedActions = [
@@ -58,6 +60,11 @@ module.exports = {
         'plugin::users-permissions.user.findOne',
         'plugin::users-permissions.user.update',
         'api::course.course.getAdminStats',
+        'api::blog.blog.find',
+        'api::blog.blog.findOne',
+        'api::blog.blog.create',
+        'api::blog.blog.update',
+        'api::blog.blog.delete',
       ];
 
       // Helper to grant permissions if missing

@@ -14,7 +14,7 @@
       "name": "Apache 2.0",
       "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
     },
-    "x-generation-date": "2026-08-29T18:47:06.799Z"
+    "x-generation-date": "2026-08-29T20:36:04.734Z"
   },
   "x-strapi-config": {
     "plugins": [
@@ -5631,12 +5631,15 @@
                 "type": "string"
               },
               "description": {},
-              "statuss": {
+              "post_status": {
                 "type": "string",
                 "enum": [
                   "draft",
                   "published"
                 ]
+              },
+              "cover_image_url": {
+                "type": "string"
               },
               "cover_image": {
                 "oneOf": [
@@ -5736,12 +5739,15 @@
             "type": "string"
           },
           "description": {},
-          "statuss": {
+          "post_status": {
             "type": "string",
             "enum": [
               "draft",
               "published"
             ]
+          },
+          "cover_image_url": {
+            "type": "string"
           },
           "cover_image": {
             "type": "object",
@@ -8511,12 +8517,15 @@
                       "type": "string"
                     },
                     "description": {},
-                    "statuss": {
+                    "post_status": {
                       "type": "string",
                       "enum": [
                         "draft",
                         "published"
                       ]
+                    },
+                    "cover_image_url": {
+                      "type": "string"
                     },
                     "cover_image": {
                       "type": "object",
@@ -11457,12 +11466,15 @@
                                       "type": "string"
                                     },
                                     "description": {},
-                                    "statuss": {
+                                    "post_status": {
                                       "type": "string",
                                       "enum": [
                                         "draft",
                                         "published"
                                       ]
+                                    },
+                                    "cover_image_url": {
+                                      "type": "string"
                                     },
                                     "cover_image": {
                                       "type": "object",
@@ -15167,12 +15179,15 @@
                       "type": "string"
                     },
                     "description": {},
-                    "statuss": {
+                    "post_status": {
                       "type": "string",
                       "enum": [
                         "draft",
                         "published"
                       ]
+                    },
+                    "cover_image_url": {
+                      "type": "string"
                     },
                     "cover_image": {
                       "type": "object",
@@ -18002,12 +18017,15 @@
                                       "type": "string"
                                     },
                                     "description": {},
-                                    "statuss": {
+                                    "post_status": {
                                       "type": "string",
                                       "enum": [
                                         "draft",
                                         "published"
                                       ]
+                                    },
+                                    "cover_image_url": {
+                                      "type": "string"
                                     },
                                     "cover_image": {
                                       "type": "object",
@@ -21545,12 +21563,15 @@
                       "type": "string"
                     },
                     "description": {},
-                    "statuss": {
+                    "post_status": {
                       "type": "string",
                       "enum": [
                         "draft",
                         "published"
                       ]
+                    },
+                    "cover_image_url": {
+                      "type": "string"
                     },
                     "cover_image": {
                       "type": "object",
@@ -24150,12 +24171,15 @@
                                           "type": "string"
                                         },
                                         "description": {},
-                                        "statuss": {
+                                        "post_status": {
                                           "type": "string",
                                           "enum": [
                                             "draft",
                                             "published"
                                           ]
+                                        },
+                                        "cover_image_url": {
+                                          "type": "string"
                                         },
                                         "cover_image": {
                                           "type": "object",
@@ -27566,12 +27590,15 @@
                                       "type": "string"
                                     },
                                     "description": {},
-                                    "statuss": {
+                                    "post_status": {
                                       "type": "string",
                                       "enum": [
                                         "draft",
                                         "published"
                                       ]
+                                    },
+                                    "cover_image_url": {
+                                      "type": "string"
                                     },
                                     "cover_image": {
                                       "type": "object",
@@ -31150,12 +31177,15 @@
                       "type": "string"
                     },
                     "description": {},
-                    "statuss": {
+                    "post_status": {
                       "type": "string",
                       "enum": [
                         "draft",
                         "published"
                       ]
+                    },
+                    "cover_image_url": {
+                      "type": "string"
                     },
                     "cover_image": {
                       "type": "object",

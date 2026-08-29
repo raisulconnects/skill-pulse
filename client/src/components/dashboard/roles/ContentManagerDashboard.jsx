@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { Layers, FileText, CheckCircle2, AlertCircle, PlusCircle, Search, Filter, Sparkles, HelpCircle } from "lucide-react";
 import StatCard from "../shared/StatCard";
 import SectionHeader from "../shared/SectionHeader";
@@ -35,17 +36,24 @@ export default function ContentManagerDashboard({ user }) {
               Platform Content Overview, <span className="bg-[#a8e5e5] px-2 py-0.5 rounded-[4px]">{username}</span>
             </h1>
             <p className="text-[15px] text-[#1a3300]/80 max-w-[600px]">
-              Managing <strong className="font-bold text-[#1a3300]">24 courses & 210 lessons</strong>. You have <span className="font-bold text-[#cb5521]">1 item</span> awaiting content review.
+              Manage courses, lessons, and platform blog articles with authoring controls.
             </p>
           </div>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <Link
+              href="/dashboard/blog"
+              className="inline-flex items-center justify-center gap-2 bg-[#a8e5e5] border border-[#1a3300] text-[#1a3300] px-5 py-3 rounded-[6px] text-[14px] font-bold hover:bg-[#a8e5e5]/80 transition-transform active:scale-[0.98] shadow-sm"
+            >
+              <FileText className="w-4 h-4 text-[#1a3300]" />
+              <span>Blog CMS</span>
+            </Link>
+            <Link
               href="/dashboard/courses/create"
               className="inline-flex items-center justify-center gap-2 bg-[#1a3300] text-[#fcfaf5] px-5 py-3 rounded-[6px] text-[14px] font-medium hover:bg-[#1a3300]/90 transition-transform active:scale-[0.98] shadow-sm"
             >
               <PlusCircle className="w-4 h-4 text-[#ffe95c]" />
-              <span>Add Platform Content</span>
+              <span>Add Course</span>
             </Link>
           </div>
         </div>
