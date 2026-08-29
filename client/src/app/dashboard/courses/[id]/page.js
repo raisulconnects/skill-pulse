@@ -5,17 +5,19 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import DashboardShell from "@/components/dashboard/shell/DashboardShell";
+import DeleteLessonModal from "@/components/lessons/DeleteLessonModal";
 import {
   BookOpen,
   User,
-  Clock,
   CheckCircle2,
   ArrowLeft,
   ArrowRight,
-  Sparkles,
   Edit3,
-  Calendar,
-  Layers,
+  PlusCircle,
+  Video,
+  Trash2,
+  Play,
+  Lock,
   GraduationCap,
 } from "lucide-react";
 
@@ -31,6 +33,10 @@ export default function CourseDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [enrolling, setEnrolling] = useState(false);
   const [error, setError] = useState("");
+
+  // Lesson deletion state
+  const [lessonToDelete, setLessonToDelete] = useState(null);
+  const [isDeletingLesson, setIsDeletingLesson] = useState(false);
 
   const userRole = user?.user_role || "student";
 
@@ -106,6 +112,33 @@ export default function CourseDetailsPage() {
     }
   };
 
+  const handleDeleteLessonConfirm = async () => {
+    if (!lessonToDelete) return;
+    setIsDeletingLesson(true);
+
+    const lId = lessonToDelete.documentId || lessonToDelete.id;
+
+    try {
+      const res = await fetch(`/api/lessons/${lId}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        // Refresh course data to reflect updated lessons list
+        await loadCourseData();
+        setLessonToDelete(null);
+      } else {
+        const data = await res.json();
+        alert(data.error?.message || data.error || "Failed to delete lesson.");
+      }
+    } catch (err) {
+      console.error("Delete lesson error:", err);
+      alert("An error occurred while deleting the lesson.");
+    } finally {
+      setIsDeletingLesson(false);
+    }
+  };
+
   // Extract description text if blocks
   let descriptionText = "";
   if (typeof course?.description === "string") {
@@ -118,8 +151,18 @@ export default function CourseDetailsPage() {
 
   const instructorName = course?.instructor?.username || "SkillPulse Instructor";
   const instructorEmail = course?.instructor?.email || "faculty@skillpulse.dev";
-  const lessons = Array.isArray(course?.lessons) ? course.lessons : [];
+
+  // Sort lessons by lesson_order ascending
+  const lessons = Array.isArray(course?.lessons)
+    ? [...course.lessons].sort((a, b) => (a.lesson_order || 0) - (b.lesson_order || 0))
+    : [];
+
   const enrollmentsCount = Array.isArray(course?.enrollments) ? course.enrollments.length : 0;
+
+  const isInstructorOrAdmin =
+    userRole === "admin" ||
+    userRole === "content_manager" ||
+    (userRole === "instructor" && (course?.instructor?.id === user?.id || course?.instructor === user?.id));
 
   return (
     <DashboardShell userRole={userRole}>
@@ -134,7 +177,7 @@ export default function CourseDetailsPage() {
             <span>Back to All Courses</span>
           </Link>
 
-          {(userRole === "admin" || userRole === "content_manager" || (userRole === "instructor" && course?.instructor?.id === user?.id)) && (
+          {isInstructorOrAdmin && (
             <Link
               href={`/dashboard/courses/${course?.documentId || courseId}/edit`}
               className="inline-flex items-center gap-1.5 bg-[#ffe95c] border border-[#1a3300]/20 text-[#1a3300] px-4 py-1.5 rounded-[6px] text-[13px] font-medium hover:bg-[#ffe95c]/80 transition-colors"
@@ -245,7 +288,7 @@ export default function CourseDetailsPage() {
 
             {/* Course Overview & Description */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Left 2 Cols: Description & Syllabus */}
+              {/* Left 2 Cols: Description & Curriculum Syllabus */}
               <div className="md:col-span-2 space-y-6">
                 <div className="bg-[#fcfaf5] border border-[#1a3300]/25 rounded-[12px] p-6 shadow-sm">
                   <h3
@@ -260,41 +303,114 @@ export default function CourseDetailsPage() {
                   </div>
                 </div>
 
-                {/* Course Modules / Lessons Preview */}
+                {/* Course Modules / Lessons Management Section */}
                 <div className="bg-[#fcfaf5] border border-[#1a3300]/25 rounded-[12px] p-6 shadow-sm">
-                  <div className="flex items-center justify-between mb-4 pb-2 border-b border-[#b6b6b6]/30">
-                    <h3
-                      className="text-[20px] font-bold text-[#1a3300]"
-                      style={{ fontFamily: "var(--font-bricolage-grotesque), var(--font-bricolage), sans-serif" }}
-                    >
-                      Curriculum Syllabus
-                    </h3>
-                    <span className="text-[12px] font-mono text-[#1a3300]/60">
-                      {lessons.length} {lessons.length === 1 ? "Lesson" : "Lessons"}
-                    </span>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-[#b6b6b6]/30">
+                    <div>
+                      <h3
+                        className="text-[20px] font-bold text-[#1a3300]"
+                        style={{ fontFamily: "var(--font-bricolage-grotesque), var(--font-bricolage), sans-serif" }}
+                      >
+                        Course Lessons & Curriculum
+                      </h3>
+                      <p className="text-[12px] font-mono text-[#1a3300]/60">
+                        {lessons.length} {lessons.length === 1 ? "Lesson" : "Lessons"} in sequence
+                      </p>
+                    </div>
+
+                    {isInstructorOrAdmin && (
+                      <Link
+                        href={`/dashboard/courses/${course?.documentId || courseId}/lessons/new`}
+                        className="inline-flex items-center gap-1.5 bg-[#1a3300] text-[#fcfaf5] px-3.5 py-1.5 rounded-[6px] text-[13px] font-medium hover:bg-[#1a3300]/90 transition-transform active:scale-[0.98] shadow-sm self-start sm:self-auto"
+                      >
+                        <PlusCircle className="w-3.5 h-3.5 text-[#ffe95c]" />
+                        <span>Add Lesson</span>
+                      </Link>
+                    )}
                   </div>
 
                   {lessons.length === 0 ? (
-                    <p className="text-[14px] text-[#1a3300]/60 font-mono py-2">
-                      Lesson modules will be attached as this course progresses.
-                    </p>
+                    <div className="p-6 text-center bg-[#1a3300]/5 rounded-[8px] border border-dashed border-[#1a3300]/20">
+                      <BookOpen className="w-8 h-8 text-[#1a3300]/40 mx-auto mb-2" />
+                      <p className="text-[14px] text-[#1a3300]/70 font-medium">No lessons added yet</p>
+                      <p className="text-[12px] font-mono text-[#1a3300]/50 mt-1">
+                        {isInstructorOrAdmin
+                          ? "Click 'Add Lesson' above to create the first module for this course."
+                          : "Lesson modules will appear here once published by the instructor."}
+                      </p>
+                    </div>
                   ) : (
-                    <div className="space-y-2">
-                      {lessons.map((lesson, idx) => (
-                        <div
-                          key={lesson.id || idx}
-                          className="flex items-center justify-between p-3 rounded-[8px] bg-[#fcfaf5] border border-[#1a3300]/15"
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className="font-mono text-[12px] font-bold text-[#1a3300]/60">
-                              0{idx + 1}
-                            </span>
-                            <span className="font-medium text-[14px] text-[#1a3300]">
-                              {lesson.title || `Lesson ${idx + 1}`}
-                            </span>
+                    <div className="space-y-2.5">
+                      {lessons.map((lesson, idx) => {
+                        const lId = lesson.documentId || lesson.id;
+                        const hasVideo = !!lesson.video_url;
+
+                        return (
+                          <div
+                            key={lId || idx}
+                            className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-[8px] bg-[#fcfaf5] border border-[#1a3300]/20 hover:border-[#1a3300] transition-colors gap-3"
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <span className="w-7 h-7 rounded-[6px] bg-[#1a3300]/10 font-mono text-[12px] font-bold text-[#1a3300] flex items-center justify-center shrink-0">
+                                {lesson.lesson_order || idx + 1}
+                              </span>
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h4 className="font-bold text-[14px] text-[#1a3300] truncate">
+                                    {lesson.title}
+                                  </h4>
+                                  {hasVideo && (
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-mono font-medium px-2 py-0.2 rounded-[4px] bg-[#ffe95c] border border-[#1a3300]/20 text-[#1a3300]">
+                                      <Video className="w-3 h-3" />
+                                      <span>Video</span>
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+                              {/* Open Lesson Button (For Enrolled Students or Management) */}
+                              {(userRole !== "student" || isEnrolled) ? (
+                                <Link
+                                  href={`/dashboard/courses/${course?.documentId || courseId}/lessons/${lId}`}
+                                  className="inline-flex items-center gap-1 text-[12px] font-mono font-medium text-[#1a3300] bg-[#d5f5c2] border border-[#1a3300]/20 px-2.5 py-1 rounded-[5px] hover:bg-[#d5f5c2]/80 transition-colors"
+                                >
+                                  <Play className="w-3 h-3 fill-[#1a3300]" />
+                                  <span>Open</span>
+                                </Link>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 text-[11px] font-mono text-[#1a3300]/50 bg-[#1a3300]/5 px-2.5 py-1 rounded-[5px]">
+                                  <Lock className="w-3 h-3" />
+                                  <span>Locked</span>
+                                </span>
+                              )}
+
+                              {/* Instructor / Admin Actions */}
+                              {isInstructorOrAdmin && (
+                                <>
+                                  <Link
+                                    href={`/dashboard/courses/${course?.documentId || courseId}/lessons/${lId}/edit`}
+                                    className="p-1.5 text-[#1a3300]/70 hover:text-[#1a3300] hover:bg-[#1a3300]/10 rounded-[4px] transition-colors"
+                                    title="Edit Lesson"
+                                  >
+                                    <Edit3 className="w-3.5 h-3.5" />
+                                  </Link>
+                                  <button
+                                    type="button"
+                                    onClick={() => setLessonToDelete(lesson)}
+                                    className="p-1.5 text-[#cb5521]/80 hover:text-[#cb5521] hover:bg-[#cb5521]/10 rounded-[4px] transition-colors"
+                                    title="Delete Lesson"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -333,6 +449,15 @@ export default function CourseDetailsPage() {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteLessonModal
+        isOpen={!!lessonToDelete}
+        lessonTitle={lessonToDelete?.title || ""}
+        onConfirm={handleDeleteLessonConfirm}
+        onClose={() => setLessonToDelete(null)}
+        isDeleting={isDeletingLesson}
+      />
     </DashboardShell>
   );
 }

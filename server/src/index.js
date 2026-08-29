@@ -27,6 +27,11 @@ module.exports = {
         'api::enrollment.enrollment.find',
         'api::enrollment.enrollment.findOne',
         'api::enrollment.enrollment.create',
+        'api::lesson.lesson.find',
+        'api::lesson.lesson.findOne',
+        'api::lesson.lesson.create',
+        'api::lesson.lesson.update',
+        'api::lesson.lesson.delete',
         'plugin::users-permissions.user.find',
         'plugin::users-permissions.user.findOne',
       ];

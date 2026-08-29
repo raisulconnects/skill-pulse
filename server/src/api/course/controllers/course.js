@@ -63,7 +63,9 @@ module.exports = createCoreController('api::course.course', ({ strapi }) => ({
         fields: ['id', 'username', 'email', 'user_role'],
       },
       thumbnail: true,
-      lessons: true,
+      lessons: {
+        sort: ['lesson_order:asc', 'id:asc'],
+      },
       quizzes: true,
       enrollments: {
         populate: { student: { fields: ['id', 'username', 'email'] } },
