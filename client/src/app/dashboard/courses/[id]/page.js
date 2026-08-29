@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import DashboardShell from "@/components/dashboard/shell/DashboardShell";
 import DeleteLessonModal from "@/components/lessons/DeleteLessonModal";
+import DeleteQuizModal from "@/components/quizzes/DeleteQuizModal";
 import {
   BookOpen,
   User,
@@ -21,6 +22,8 @@ import {
   GraduationCap,
   Award,
   Sparkles,
+  HelpCircle,
+  Settings2,
 } from "lucide-react";
 
 export default function CourseDetailsPage() {
@@ -48,7 +51,30 @@ export default function CourseDetailsPage() {
   const [lessonToDelete, setLessonToDelete] = useState(null);
   const [isDeletingLesson, setIsDeletingLesson] = useState(false);
 
+  // Quiz state
+  const [quizzes, setQuizzes] = useState([]);
+  const [quizzesLoading, setQuizzesLoading] = useState(false);
+  const [quizToDelete, setQuizToDelete] = useState(null);
+  const [isDeletingQuiz, setIsDeletingQuiz] = useState(false);
+
   const userRole = user?.user_role || "student";
+
+  const loadQuizzes = useCallback(async () => {
+    if (!courseId || userRole === "student") return;
+    setQuizzesLoading(true);
+    try {
+      const res = await fetch(`/api/quizzes?filters[course][documentId][$eq]=${courseId}&populate[0]=questions&populate[1]=author`);
+      const data = await res.json();
+      if (res.ok) {
+        const list = Array.isArray(data.data) ? data.data : [];
+        setQuizzes(list);
+      }
+    } catch (err) {
+      console.error("Error loading quizzes:", err);
+    } finally {
+      setQuizzesLoading(false);
+    }
+  }, [courseId, userRole]);
 
   const loadCourseData = async () => {
     if (!courseId) return;
@@ -103,6 +129,7 @@ export default function CourseDetailsPage() {
   useEffect(() => {
     if (!authLoading) {
       loadCourseData();
+      loadQuizzes();
     }
   }, [courseId, authLoading, user]);
 
@@ -158,6 +185,26 @@ export default function CourseDetailsPage() {
       alert("An error occurred while deleting the lesson.");
     } finally {
       setIsDeletingLesson(false);
+    }
+  };
+
+  const handleDeleteQuizConfirm = async () => {
+    if (!quizToDelete) return;
+    setIsDeletingQuiz(true);
+    const qId = quizToDelete.documentId || quizToDelete.id;
+    try {
+      const res = await fetch(`/api/quizzes/${qId}`, { method: "DELETE" });
+      if (res.ok) {
+        await loadQuizzes();
+        setQuizToDelete(null);
+      } else {
+        const data = await res.json();
+        alert(data.error?.message || data.error || "Failed to delete quiz.");
+      }
+    } catch {
+      alert("An error occurred while deleting the quiz.");
+    } finally {
+      setIsDeletingQuiz(false);
     }
   };
 
@@ -482,14 +529,105 @@ export default function CourseDetailsPage() {
                                   </button>
                                 </>
                               )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                </div>
+
+            {/* Quizzes Section — Authoring for admin/content_manager/instructor */}
+            {isInstructorOrAdmin && (
+              <div className="bg-[#fcfaf5] border border-[#1a3300]/25 rounded-[12px] p-6 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-[#b6b6b6]/30">
+                  <div>
+                    <h3
+                      className="text-[20px] font-bold text-[#1a3300]"
+                      style={{ fontFamily: "var(--font-bricolage-grotesque), var(--font-bricolage), sans-serif" }}
+                    >
+                      Course Quizzes
+                    </h3>
+                    <p className="text-[12px] font-mono text-[#1a3300]/60">
+                      {quizzes.length} {quizzes.length === 1 ? "Quiz" : "Quizzes"} — manage assessments
+                    </p>
+                  </div>
+
+                  <Link
+                    href={`/dashboard/courses/${course?.documentId || courseId}/quizzes/new`}
+                    className="inline-flex items-center gap-1.5 bg-[#1a3300] text-[#fcfaf5] px-3.5 py-1.5 rounded-[6px] text-[13px] font-medium hover:bg-[#1a3300]/90 transition-transform active:scale-[0.98] shadow-sm self-start sm:self-auto"
+                  >
+                    <PlusCircle className="w-3.5 h-3.5 text-[#ffe95c]" />
+                    <span>Create Quiz</span>
+                  </Link>
+                </div>
+
+                {quizzesLoading ? (
+                  <div className="py-6 text-center">
+                    <div className="w-6 h-6 border-2 border-[#1a3300] border-t-[#ffe95c] rounded-full animate-spin mx-auto" />
+                  </div>
+                ) : quizzes.length === 0 ? (
+                  <div className="p-6 text-center bg-[#1a3300]/5 rounded-[8px] border border-dashed border-[#1a3300]/20">
+                    <HelpCircle className="w-8 h-8 text-[#1a3300]/40 mx-auto mb-2" />
+                    <p className="text-[14px] text-[#1a3300]/70 font-medium">No quizzes created yet</p>
+                    <p className="text-[12px] font-mono text-[#1a3300]/50 mt-1">
+                      Click &lsquo;Create Quiz&rsquo; above to add an assessment for this course.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2.5">
+                    {quizzes.map((quiz) => {
+                      const qId = quiz.documentId || quiz.id;
+                      const questionCount = Array.isArray(quiz.questions) ? quiz.questions.length : 0;
+                      const authorName = quiz.author?.username || "Author";
+                      return (
+                        <div
+                          key={qId}
+                          className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-[8px] border border-[#1a3300]/20 bg-[#fcfaf5] hover:border-[#1a3300] transition-colors gap-3"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <span className="w-7 h-7 rounded-[6px] bg-[#ffe95c] border border-[#1a3300]/20 flex items-center justify-center shrink-0">
+                              <HelpCircle className="w-3.5 h-3.5 text-[#1a3300]" />
+                            </span>
+                            <div className="min-w-0">
+                              <h4 className="font-bold text-[14px] text-[#1a3300] truncate">{quiz.title}</h4>
+                              <p className="text-[11px] font-mono text-[#1a3300]/60">
+                                {questionCount} {questionCount === 1 ? "question" : "questions"} · by {authorName}
+                              </p>
                             </div>
                           </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
+
+                          <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+                            <Link
+                              href={`/dashboard/courses/${course?.documentId || courseId}/quizzes/${qId}/edit`}
+                              className="inline-flex items-center gap-1 text-[12px] font-mono font-medium px-3 py-1 rounded-[5px] bg-[#d5f5c2] border border-[#1a3300]/20 text-[#1a3300] hover:bg-[#d5f5c2]/80 transition-colors"
+                            >
+                              <Settings2 className="w-3 h-3" />
+                              <span>Manage Questions</span>
+                            </Link>
+                            <Link
+                              href={`/dashboard/courses/${course?.documentId || courseId}/quizzes/${qId}/edit`}
+                              className="p-1.5 text-[#1a3300]/70 hover:text-[#1a3300] hover:bg-[#1a3300]/10 rounded-[4px] transition-colors"
+                              title="Edit Quiz"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </Link>
+                            <button
+                              onClick={() => setQuizToDelete(quiz)}
+                              className="p-1.5 text-[#cb5521]/80 hover:text-[#cb5521] hover:bg-[#cb5521]/10 rounded-[4px] transition-colors"
+                              title="Delete Quiz"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
+            )}
+          </div>
 
               {/* Right 1 Col: Instructor Bio */}
               <div className="space-y-4">
@@ -525,13 +663,22 @@ export default function CourseDetailsPage() {
         )}
       </div>
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Lesson Confirmation Modal */}
       <DeleteLessonModal
         isOpen={!!lessonToDelete}
         lessonTitle={lessonToDelete?.title || ""}
         onConfirm={handleDeleteLessonConfirm}
         onClose={() => setLessonToDelete(null)}
         isDeleting={isDeletingLesson}
+      />
+
+      {/* Delete Quiz Confirmation Modal */}
+      <DeleteQuizModal
+        isOpen={!!quizToDelete}
+        quizTitle={quizToDelete?.title || ""}
+        onConfirm={handleDeleteQuizConfirm}
+        onClose={() => setQuizToDelete(null)}
+        isDeleting={isDeletingQuiz}
       />
     </DashboardShell>
   );
