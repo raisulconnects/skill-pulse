@@ -35,6 +35,11 @@ module.exports = createCoreController('api::lesson.lesson', ({ strapi }) => ({
       query.filters?.course ||
       query.course;
 
+    // Students MUST provide a course filter — otherwise they could dump all lessons
+    if (role === 'student' && !courseId) {
+      return ctx.forbidden('Students must specify a course to view lessons');
+    }
+
     if (courseId) {
       let courseObj = null;
       try {

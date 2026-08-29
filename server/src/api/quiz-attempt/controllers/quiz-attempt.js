@@ -278,4 +278,41 @@ module.exports = createCoreController('api::quiz-attempt.quiz-attempt', ({ strap
       },
     });
   },
+
+  async create(ctx) {
+    // QuizAttempts must ONLY be created via the POST /api/quizzes/:id/submit endpoint,
+    // which pins the student to the authenticated session and calculates the score server-side.
+    // The raw create endpoint is disabled to prevent student ID or score forgery.
+    const user = ctx.state.user;
+    if (!user) {
+      return ctx.unauthorized('You must be authenticated');
+    }
+    if (user.user_role !== 'admin') {
+      return ctx.forbidden('Quiz attempts must be submitted through the quiz submission endpoint.');
+    }
+    return await super.create(ctx);
+  },
+
+  async update(ctx) {
+    // Quiz attempts are immutable once submitted. No role can edit them through the API.
+    const user = ctx.state.user;
+    if (!user) {
+      return ctx.unauthorized('You must be authenticated');
+    }
+    if (user.user_role !== 'admin') {
+      return ctx.forbidden('Quiz attempts cannot be modified after submission.');
+    }
+    return await super.update(ctx);
+  },
+
+  async delete(ctx) {
+    const user = ctx.state.user;
+    if (!user) {
+      return ctx.unauthorized('You must be authenticated');
+    }
+    if (user.user_role !== 'admin') {
+      return ctx.forbidden('Only administrators can delete quiz attempt records.');
+    }
+    return await super.delete(ctx);
+  },
 }));

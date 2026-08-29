@@ -381,4 +381,74 @@ module.exports = createCoreController('api::progress.progress', ({ strapi }) => 
       },
     };
   },
+  async create(ctx) {
+    // Progress records must ONLY be created via the completeLesson action.
+    // The raw create endpoint is internal and must never be called directly,
+    // especially not with a user-supplied studentId.
+    const user = ctx.state.user;
+    if (!user) {
+      return ctx.unauthorized('You must be authenticated');
+    }
+    // Only admin can directly create progress records (e.g. data import).
+    // All other roles — including students — must go through completeLesson.
+    if (user.user_role !== 'admin') {
+      return ctx.forbidden('Progress records cannot be created directly. Use the lesson completion flow.');
+    }
+    return await super.create(ctx);
+  },
+
+  async update(ctx) {
+    const user = ctx.state.user;
+    if (!user) {
+      return ctx.unauthorized('You must be authenticated to update progress');
+    }
+
+    const role = user.user_role;
+    // Students cannot directly update progress records; only completeLesson is allowed.
+    if (role === 'student') {
+      return ctx.forbidden('Students cannot directly modify progress. Use the lesson completion flow.');
+    }
+
+    const { id } = ctx.params;
+    let progress = null;
+    try {
+      progress = await strapi.documents('api::progress.progress').findOne({
+        documentId: id,
+        populate: { student: { fields: ['id'] }, course: { populate: ['instructor'] } },
+      });
+    } catch {
+      progress = await strapi.db.query('api::progress.progress').findOne({
+        where: { id },
+        populate: { student: { fields: ['id'] }, course: { populate: ['instructor'] } },
+      });
+    }
+
+    if (!progress) {
+      return ctx.notFound('Progress record not found');
+    }
+
+    if (role === 'instructor' && progress.course?.instructor?.id !== user.id) {
+      return ctx.forbidden('You can only update progress for your own courses');
+    }
+
+    return await super.update(ctx);
+  },
+
+  async delete(ctx) {
+    const user = ctx.state.user;
+    if (!user) {
+      return ctx.unauthorized('You must be authenticated to delete progress');
+    }
+
+    const role = user.user_role;
+    if (role === 'student') {
+      return ctx.forbidden('Students cannot delete progress records');
+    }
+
+    if (role !== 'admin') {
+      return ctx.forbidden('Only administrators can delete progress records');
+    }
+
+    return await super.delete(ctx);
+  },
 }));
