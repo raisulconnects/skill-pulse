@@ -61,7 +61,15 @@ module.exports = (plugin) => {
 
       // If request is querying for specific dropdown filters (e.g. instructor list for course creation)
       if (query.filters || query['filters[user_role][$eq]']) {
-        return originalFind(ctx);
+        const isInstructorQuery =
+          query['filters[user_role][$eq]'] === 'instructor' ||
+          query.filters?.user_role?.$eq === 'instructor' ||
+          query.filters?.user_role === 'instructor';
+
+        if (role === 'admin' || isInstructorQuery) {
+          return originalFind(ctx);
+        }
+        return ctx.forbidden('Access denied. Administrator privileges required to search or filter users.');
       }
 
       // Admin-only check for platform user management
