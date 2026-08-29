@@ -55,8 +55,6 @@ export const DASHBOARD_NAV = {
     { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
     { name: "My Learning", href: "/dashboard/my-learning", icon: BookOpen },
     { name: "Browse Courses", href: "/dashboard/courses", icon: Compass },
-    { name: "Quiz Center", href: "#quizzes", icon: CheckSquare },
-    { name: "Achievements", href: "#achievements", icon: Trophy },
   ],
   instructor: [
     { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
@@ -77,6 +75,5 @@ export const DASHBOARD_NAV = {
     { name: "Admin Courses", href: "/dashboard/admin/courses", icon: BookOpen },
     { name: "Blog CMS", href: "/dashboard/blog", icon: FileText },
     { name: "User Management", href: "/dashboard/admin/users", icon: Users },
-    { name: "System Settings", href: "#settings", icon: Settings },
   ],
 };

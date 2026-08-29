@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { Menu, Search, Bell, Sparkles, LogOut, User } from "lucide-react";
+import { Menu, Sparkles, LogOut, User } from "lucide-react";
 import { ROLE_CONFIG } from "@/lib/dashboard-nav";
 import { useAuth } from "@/context/AuthContext";
 
@@ -41,29 +41,8 @@ export default function DashboardHeader({
           </div>
         </div>
 
-        {/* Center: Search Bar */}
-        <div className="hidden md:flex items-center flex-1 max-w-[380px]">
-          <div className="relative w-full">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#1a3300]/50" />
-            <input
-              type="text"
-              placeholder="Search courses, lessons, quizzes..."
-              className="w-full bg-[#fcfaf5] border border-[#1a3300]/20 rounded-[6px] pl-9 pr-4 py-1.5 text-[13px] text-[#1a3300] placeholder:text-[#1a3300]/50 focus:outline-none focus:border-[#1a3300] transition-colors"
-            />
-          </div>
-        </div>
-
-        {/* Right: Notifications, Role Tag & User Menu */}
+        {/* Right: Role Tag & User Menu */}
         <div className="flex items-center gap-3">
-          {/* Notifications button */}
-          <button
-            className="relative p-2 text-[#1a3300] rounded-[6px] hover:bg-[#1a3300]/5 transition-colors border border-[#1a3300]/15"
-            title="Notifications"
-          >
-            <Bell className="w-4 h-4" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#cb5521] rounded-full" />
-          </button>
-
           {/* Role badge */}
           <div className={`hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-[6px] text-[12px] font-mono font-bold border ${roleConfig.badgeBg} ${roleConfig.badgeText} ${roleConfig.badgeBorder}`}>
             <RoleIcon className="w-3.5 h-3.5" />
