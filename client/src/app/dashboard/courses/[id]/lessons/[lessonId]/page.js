@@ -17,6 +17,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Lock,
+  Award,
 } from "lucide-react";
 
 /**
@@ -66,6 +67,14 @@ export default function LessonViewPage() {
   const [error, setError] = useState("");
   const [isEnrolled, setIsEnrolled] = useState(false);
 
+  // Progress state
+  const [progressData, setProgressData] = useState({
+    completed_lessons: [],
+    percentage: 0,
+    total_lessons: 0,
+  });
+  const [isCompleting, setIsCompleting] = useState(false);
+
   const userRole = user?.user_role || "student";
 
   const loadData = async () => {
@@ -84,9 +93,10 @@ export default function LessonViewPage() {
         return;
       }
 
-      setLesson(lessonData.data);
+      const currentLesson = lessonData.data;
+      setLesson(currentLesson);
 
-      // 2. Fetch course details to get syllabus & siblings
+      // 2. Fetch course details
       const courseRes = await fetch(`/api/courses/${courseId}`);
       const courseData = await courseRes.json();
 
@@ -103,6 +113,19 @@ export default function LessonViewPage() {
             return String(cId) === String(courseData.data.documentId) || String(cId) === String(courseData.data.id) || String(cId) === String(courseId);
           });
           setIsEnrolled(enrolled);
+
+          // 3. Fetch Student Course Progress
+          if (enrolled) {
+            try {
+              const pRes = await fetch(`/api/progress/course/${courseId}`);
+              const pData = await pRes.json();
+              if (pRes.ok && pData.data) {
+                setProgressData(pData.data);
+              }
+            } catch (pErr) {
+              console.error("Error loading course progress:", pErr);
+            }
+          }
         }
       }
     } catch (err) {
@@ -118,6 +141,49 @@ export default function LessonViewPage() {
       loadData();
     }
   }, [lessonId, courseId, authLoading, user]);
+
+  const handleMarkComplete = async () => {
+    if (!user || userRole !== "student" || isCompleting) return;
+    setIsCompleting(true);
+
+    const targetLessonId = lesson?.documentId || lesson?.id || lessonId;
+
+    try {
+      const res = await fetch("/api/progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          course: course?.documentId || courseId,
+          lesson: targetLessonId,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.data) {
+        setProgressData((prev) => ({
+          ...prev,
+          completed_lessons: data.data.completed_lessons || [...prev.completed_lessons, targetLessonId],
+          percentage: data.data.percentage ?? prev.percentage,
+          completed_count: data.data.completed_count ?? prev.completed_count,
+        }));
+      } else {
+        alert(data.error?.message || data.error || "Failed to mark lesson complete.");
+      }
+    } catch (err) {
+      console.error("Complete lesson error:", err);
+      alert("An unexpected error occurred while saving progress.");
+    } finally {
+      setIsCompleting(false);
+    }
+  };
+
+  // Check if current lesson is completed
+  const currentNumericId = lesson?.id;
+  const currentDocId = lesson?.documentId;
+  const isLessonCompleted = Array.isArray(progressData.completed_lessons) && progressData.completed_lessons.some(
+    (item) => String(item) === String(currentNumericId) || String(item) === String(currentDocId) || String(item) === String(lessonId)
+  );
 
   // Handle block or string description
   let descriptionText = "";
@@ -214,28 +280,66 @@ export default function LessonViewPage() {
         ) : (
           <div className="space-y-6">
             {/* Header Banner */}
-            <div className="bg-[#fcfaf5] border-2 border-[#1a3300] rounded-[16px] p-6 shadow-[rgba(0,0,0,0.05)_0px_4px_12px]">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-[4px] bg-[#d5f5c2] border border-[#1a3300]/20 text-[#1a3300] uppercase tracking-wider">
-                  Lesson 0{lesson.lesson_order || currentIdx + 1}
-                </span>
-                {videoUrl && (
-                  <span className="text-[11px] font-mono font-medium px-2.5 py-0.5 rounded-[4px] bg-[#ffe95c] border border-[#1a3300]/20 text-[#1a3300] uppercase tracking-wider flex items-center gap-1">
-                    <Video className="w-3 h-3" />
-                    <span>Video Included</span>
+            <div className="bg-[#fcfaf5] border-2 border-[#1a3300] rounded-[16px] p-6 shadow-[rgba(0,0,0,0.05)_0px_4px_12px] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
+                  <span className="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-[4px] bg-[#d5f5c2] border border-[#1a3300]/20 text-[#1a3300] uppercase tracking-wider">
+                    Lesson 0{lesson.lesson_order || currentIdx + 1}
                   </span>
-                )}
+                  {videoUrl && (
+                    <span className="text-[11px] font-mono font-medium px-2.5 py-0.5 rounded-[4px] bg-[#ffe95c] border border-[#1a3300]/20 text-[#1a3300] uppercase tracking-wider flex items-center gap-1">
+                      <Video className="w-3 h-3" />
+                      <span>Video Included</span>
+                    </span>
+                  )}
+                </div>
+
+                <h1
+                  className="text-[26px] sm:text-[32px] font-[800] text-[#1a3300] leading-tight"
+                  style={{ fontFamily: "var(--font-bricolage-grotesque), var(--font-bricolage), sans-serif" }}
+                >
+                  {lesson.title}
+                </h1>
+                <p className="text-[13px] font-mono text-[#1a3300]/60 mt-1">
+                  Course: {course?.title}
+                </p>
               </div>
 
-              <h1
-                className="text-[26px] sm:text-[32px] font-[800] text-[#1a3300] leading-tight"
-                style={{ fontFamily: "var(--font-bricolage-grotesque), var(--font-bricolage), sans-serif" }}
-              >
-                {lesson.title}
-              </h1>
-              <p className="text-[13px] font-mono text-[#1a3300]/60 mt-1">
-                Course: {course?.title}
-              </p>
+              {/* Student Progress Badge & Complete Action */}
+              {userRole === "student" && isEnrolled && (
+                <div className="flex flex-col items-start sm:items-end gap-2 shrink-0 border-t sm:border-t-0 border-[#1a3300]/15 pt-3 sm:pt-0">
+                  <div className="inline-flex items-center gap-1.5 bg-[#ffe95c] border border-[#1a3300]/20 px-2.5 py-1 rounded-[6px] font-mono text-[12px] text-[#1a3300] font-bold">
+                    <Award className="w-3.5 h-3.5" />
+                    <span>Progress: {progressData.percentage || 0}%</span>
+                  </div>
+
+                  {isLessonCompleted ? (
+                    <div className="inline-flex items-center gap-1.5 bg-[#d5f5c2] border border-[#1a3300]/30 px-4 py-2 rounded-[6px] text-[13px] font-bold text-[#1a3300]">
+                      <CheckCircle2 className="w-4 h-4 text-[#1a3300]" />
+                      <span>Lesson Completed ✓</span>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleMarkComplete}
+                      disabled={isCompleting}
+                      className="inline-flex items-center gap-2 bg-[#1a3300] text-[#fcfaf5] px-4 py-2 rounded-[6px] text-[13px] font-medium hover:bg-[#1a3300]/90 transition-transform active:scale-[0.98] shadow-sm disabled:opacity-50"
+                    >
+                      {isCompleting ? (
+                        <>
+                          <div className="w-3.5 h-3.5 border-2 border-[#fcfaf5] border-t-transparent rounded-full animate-spin" />
+                          <span>Saving...</span>
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="w-4 h-4 text-[#ffe95c]" />
+                          <span>Mark as Complete</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Video Player Area (ONLY displayed if video_url exists) */}

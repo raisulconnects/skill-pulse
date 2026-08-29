@@ -32,6 +32,12 @@ module.exports = {
         'api::lesson.lesson.create',
         'api::lesson.lesson.update',
         'api::lesson.lesson.delete',
+        'api::progress.progress.find',
+        'api::progress.progress.findOne',
+        'api::progress.progress.create',
+        'api::progress.progress.update',
+        'api::progress.progress.completeLesson',
+        'api::progress.progress.getCourseProgress',
         'plugin::users-permissions.user.find',
         'plugin::users-permissions.user.findOne',
       ];

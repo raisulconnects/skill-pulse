@@ -8,6 +8,7 @@ export default function CourseCard({
   course,
   userRole = "student",
   isEnrolled = false,
+  progress = null,
   onEnroll,
   isEnrolling = false,
   onDelete,
@@ -41,6 +42,7 @@ export default function CourseCard({
 
   const enrollmentCount = Array.isArray(enrollments) ? enrollments.length : 0;
   const lessonCount = Array.isArray(lessons) ? lessons.length : (course.lessons_count || 0);
+  const progressPercentage = progress?.percentage ?? null;
 
   return (
     <div className="bg-[#fcfaf5] border border-[#1a3300]/25 rounded-[12px] overflow-hidden flex flex-col justify-between hover:border-[#1a3300] hover:shadow-[rgba(0,0,0,0.06)_0px_4px_12px] transition-all duration-200 group">
@@ -83,7 +85,7 @@ export default function CourseCard({
           <div className="absolute top-3 right-3">
             <span className="inline-flex items-center gap-1 bg-[#d5f5c2] text-[#1a3300] text-[11px] font-mono font-bold px-2.5 py-1 rounded-[4px] border border-[#1a3300]/20 shadow-xs">
               <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>Enrolled</span>
+              <span>{progressPercentage !== null ? `${progressPercentage}%` : "Enrolled"}</span>
             </span>
           </div>
         )}
@@ -105,6 +107,22 @@ export default function CourseCard({
               {title}
             </Link>
           </h3>
+
+          {/* Progress Bar (If progress provided) */}
+          {userRole === "student" && isEnrolled && progressPercentage !== null && (
+            <div className="mb-3 pt-1">
+              <div className="flex items-center justify-between text-[11px] font-mono text-[#1a3300]/80 mb-1">
+                <span>Progress</span>
+                <span className="font-bold">{progressPercentage}%</span>
+              </div>
+              <div className="w-full h-2 bg-[#1a3300]/10 rounded-full overflow-hidden border border-[#1a3300]/15">
+                <div
+                  className="h-full bg-[#1a3300] rounded-full transition-all duration-300"
+                  style={{ width: `${progressPercentage}%` }}
+                />
+              </div>
+            </div>
+          )}
 
           {descriptionText && (
             <p className="text-[13px] text-[#1a3300]/75 line-clamp-2 mb-4 leading-relaxed">

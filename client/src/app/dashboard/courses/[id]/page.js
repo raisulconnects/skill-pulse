@@ -19,6 +19,8 @@ import {
   Play,
   Lock,
   GraduationCap,
+  Award,
+  Sparkles,
 } from "lucide-react";
 
 export default function CourseDetailsPage() {
@@ -33,6 +35,14 @@ export default function CourseDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [enrolling, setEnrolling] = useState(false);
   const [error, setError] = useState("");
+
+  // Student progress state
+  const [progressData, setProgressData] = useState({
+    completed_lessons: [],
+    percentage: 0,
+    completed_count: 0,
+    total_lessons: 0,
+  });
 
   // Lesson deletion state
   const [lessonToDelete, setLessonToDelete] = useState(null);
@@ -59,7 +69,7 @@ export default function CourseDetailsPage() {
       const courseData = data.data;
       setCourse(courseData);
 
-      // 2. Check if student is already enrolled
+      // 2. Check if student is already enrolled & load progress
       if (user && userRole === "student") {
         const resEnroll = await fetch("/api/enrollments");
         const dataEnroll = await resEnroll.json();
@@ -69,6 +79,18 @@ export default function CourseDetailsPage() {
           return String(cId) === String(courseData.documentId) || String(cId) === String(courseData.id) || String(cId) === String(courseId);
         });
         setIsEnrolled(enrolled);
+
+        if (enrolled) {
+          try {
+            const pRes = await fetch(`/api/progress/course/${courseId}`);
+            const pData = await pRes.json();
+            if (pRes.ok && pData.data) {
+              setProgressData(pData.data);
+            }
+          } catch (pErr) {
+            console.error("Error fetching course progress:", pErr);
+          }
+        }
       }
     } catch (err) {
       console.error("Error loading course:", err);
@@ -101,6 +123,7 @@ export default function CourseDetailsPage() {
 
       if (res.ok) {
         setIsEnrolled(true);
+        loadCourseData();
       } else {
         alert(data.error?.message || data.error || "Failed to enroll.");
       }
@@ -124,7 +147,6 @@ export default function CourseDetailsPage() {
       });
 
       if (res.ok) {
-        // Refresh course data to reflect updated lessons list
         await loadCourseData();
         setLessonToDelete(null);
       } else {
@@ -156,6 +178,13 @@ export default function CourseDetailsPage() {
   const lessons = Array.isArray(course?.lessons)
     ? [...course.lessons].sort((a, b) => (a.lesson_order || 0) - (b.lesson_order || 0))
     : [];
+
+  // Find next uncompleted lesson for "Continue Learning"
+  const completedLessonIds = Array.isArray(progressData.completed_lessons) ? progressData.completed_lessons.map(String) : [];
+  const nextUncompletedLesson = lessons.find((l) => {
+    const lId = String(l.documentId || l.id);
+    return !completedLessonIds.includes(lId);
+  }) || lessons[0];
 
   const enrollmentsCount = Array.isArray(course?.enrollments) ? course.enrollments.length : 0;
 
@@ -191,7 +220,7 @@ export default function CourseDetailsPage() {
         {loading ? (
           <div className="py-20 text-center text-[#1a3300]">
             <div className="w-8 h-8 border-3 border-[#1a3300] border-t-[#ffe95c] rounded-full animate-spin mx-auto mb-3" />
-            <p className="font-mono text-[13px] text-[#1a3300]/70">Loading course curriculum...</p>
+            <p className="font-mono text-[13px] text-[#1a3300]/70">Loading course details...</p>
           </div>
         ) : error || !course ? (
           <div className="bg-[#fcd0d0] border-2 border-[#cb5521] rounded-[12px] p-6 text-center text-[#cb5521]">
@@ -240,11 +269,11 @@ export default function CourseDetailsPage() {
                   </div>
                 </div>
 
-                {/* Enrollment Card Widget */}
-                <div className="w-full md:w-64 bg-[#fcfaf5] border border-[#1a3300]/30 rounded-[12px] p-5 shrink-0 shadow-sm flex flex-col justify-between">
+                {/* Enrollment / Progress Card Widget */}
+                <div className="w-full md:w-72 bg-[#fcfaf5] border border-[#1a3300]/30 rounded-[12px] p-5 shrink-0 shadow-sm flex flex-col justify-between">
                   <div className="mb-4">
                     <span className="text-[11px] font-mono text-[#1a3300]/60 uppercase block mb-1">
-                      Enrollment Status
+                      Enrollment & Status
                     </span>
                     <span
                       className="text-[20px] font-bold text-[#1a3300] block leading-none"
@@ -256,16 +285,34 @@ export default function CourseDetailsPage() {
 
                   {userRole === "student" ? (
                     isEnrolled ? (
-                      <div className="space-y-2">
-                        <div className="w-full text-center bg-[#d5f5c2] border border-[#1a3300]/20 text-[#1a3300] py-2.5 rounded-[6px] font-mono text-[13px] font-bold">
-                          Enrolled ✓
+                      <div className="space-y-3">
+                        {/* Student Progress Summary */}
+                        <div className="bg-[#1a3300]/5 border border-[#1a3300]/15 rounded-[8px] p-3 space-y-1.5">
+                          <div className="flex items-center justify-between text-[12px] font-mono text-[#1a3300]">
+                            <span>Course Progress</span>
+                            <span className="font-bold">{progressData.percentage || 0}%</span>
+                          </div>
+                          {/* Progress Bar */}
+                          <div className="w-full h-2.5 bg-[#1a3300]/10 rounded-full overflow-hidden border border-[#1a3300]/15">
+                            <div
+                              className="h-full bg-[#1a3300] rounded-full transition-all duration-500"
+                              style={{ width: `${progressData.percentage || 0}%` }}
+                            />
+                          </div>
+                          <span className="text-[11px] font-mono text-[#1a3300]/60 block text-right">
+                            {progressData.completed_count || 0} of {lessons.length} lessons completed
+                          </span>
                         </div>
-                        <Link
-                          href="/dashboard/my-learning"
-                          className="block text-center text-[12px] font-mono text-[#1a3300]/70 hover:text-[#1a3300] underline"
-                        >
-                          Go to My Learning →
-                        </Link>
+
+                        {nextUncompletedLesson && (
+                          <Link
+                            href={`/dashboard/courses/${course?.documentId || courseId}/lessons/${nextUncompletedLesson.documentId || nextUncompletedLesson.id}`}
+                            className="w-full inline-flex items-center justify-center gap-2 bg-[#1a3300] text-[#fcfaf5] py-2.5 rounded-[6px] text-[13px] font-medium hover:bg-[#1a3300]/90 transition-transform active:scale-[0.98] shadow-sm"
+                          >
+                            <Play className="w-3.5 h-3.5 fill-[#ffe95c] text-[#ffe95c]" />
+                            <span>Continue Learning</span>
+                          </Link>
+                        )}
                       </div>
                     ) : (
                       <button
@@ -311,7 +358,7 @@ export default function CourseDetailsPage() {
                         className="text-[20px] font-bold text-[#1a3300]"
                         style={{ fontFamily: "var(--font-bricolage-grotesque), var(--font-bricolage), sans-serif" }}
                       >
-                        Course Lessons & Curriculum
+                        Course Lessons & Syllabus
                       </h3>
                       <p className="text-[12px] font-mono text-[#1a3300]/60">
                         {lessons.length} {lessons.length === 1 ? "Lesson" : "Lessons"} in sequence
@@ -342,25 +389,49 @@ export default function CourseDetailsPage() {
                   ) : (
                     <div className="space-y-2.5">
                       {lessons.map((lesson, idx) => {
-                        const lId = lesson.documentId || lesson.id;
+                        const lId = String(lesson.documentId || lesson.id);
                         const hasVideo = !!lesson.video_url;
+                        const isLessonCompleted = completedLessonIds.includes(lId);
+                        const isNextUp = !isLessonCompleted && String(nextUncompletedLesson?.documentId || nextUncompletedLesson?.id) === lId;
 
                         return (
                           <div
                             key={lId || idx}
-                            className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-[8px] bg-[#fcfaf5] border border-[#1a3300]/20 hover:border-[#1a3300] transition-colors gap-3"
+                            className={`flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-[8px] border transition-colors gap-3 ${
+                              isLessonCompleted
+                                ? "bg-[#d5f5c2]/20 border-[#1a3300]/20"
+                                : isNextUp
+                                ? "bg-[#ffe95c]/20 border-[#1a3300]/40 shadow-xs"
+                                : "bg-[#fcfaf5] border border-[#1a3300]/20 hover:border-[#1a3300]"
+                            }`}
                           >
                             <div className="flex items-center gap-3 min-w-0">
-                              <span className="w-7 h-7 rounded-[6px] bg-[#1a3300]/10 font-mono text-[12px] font-bold text-[#1a3300] flex items-center justify-center shrink-0">
-                                {lesson.lesson_order || idx + 1}
+                              <span
+                                className={`w-7 h-7 rounded-[6px] font-mono text-[12px] font-bold flex items-center justify-center shrink-0 ${
+                                  isLessonCompleted
+                                    ? "bg-[#d5f5c2] border border-[#1a3300]/20 text-[#1a3300]"
+                                    : "bg-[#1a3300]/10 text-[#1a3300]"
+                                }`}
+                              >
+                                {isLessonCompleted ? "✓" : (lesson.lesson_order || idx + 1)}
                               </span>
                               <div className="min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <h4 className="font-bold text-[14px] text-[#1a3300] truncate">
                                     {lesson.title}
                                   </h4>
+                                  {isLessonCompleted && (
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold px-2 py-0.2 rounded-[4px] bg-[#d5f5c2] border border-[#1a3300]/20 text-[#1a3300]">
+                                      Completed ✓
+                                    </span>
+                                  )}
+                                  {isNextUp && isEnrolled && userRole === "student" && (
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold px-2 py-0.2 rounded-[4px] bg-[#ffe95c] border border-[#1a3300]/20 text-[#1a3300]">
+                                      Next Up →
+                                    </span>
+                                  )}
                                   {hasVideo && (
-                                    <span className="inline-flex items-center gap-1 text-[10px] font-mono font-medium px-2 py-0.2 rounded-[4px] bg-[#ffe95c] border border-[#1a3300]/20 text-[#1a3300]">
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-mono font-medium px-2 py-0.2 rounded-[4px] bg-[#1a3300]/10 text-[#1a3300]">
                                       <Video className="w-3 h-3" />
                                       <span>Video</span>
                                     </span>
@@ -375,10 +446,14 @@ export default function CourseDetailsPage() {
                               {(userRole !== "student" || isEnrolled) ? (
                                 <Link
                                   href={`/dashboard/courses/${course?.documentId || courseId}/lessons/${lId}`}
-                                  className="inline-flex items-center gap-1 text-[12px] font-mono font-medium text-[#1a3300] bg-[#d5f5c2] border border-[#1a3300]/20 px-2.5 py-1 rounded-[5px] hover:bg-[#d5f5c2]/80 transition-colors"
+                                  className={`inline-flex items-center gap-1 text-[12px] font-mono font-medium px-3 py-1 rounded-[5px] transition-colors ${
+                                    isNextUp
+                                      ? "bg-[#1a3300] text-[#fcfaf5] hover:bg-[#1a3300]/90"
+                                      : "bg-[#d5f5c2] border border-[#1a3300]/20 text-[#1a3300] hover:bg-[#d5f5c2]/80"
+                                  }`}
                                 >
-                                  <Play className="w-3 h-3 fill-[#1a3300]" />
-                                  <span>Open</span>
+                                  <Play className={`w-3 h-3 ${isNextUp ? "fill-[#ffe95c] text-[#ffe95c]" : "fill-[#1a3300]"}`} />
+                                  <span>{isLessonCompleted ? "Review" : "Open"}</span>
                                 </Link>
                               ) : (
                                 <span className="inline-flex items-center gap-1 text-[11px] font-mono text-[#1a3300]/50 bg-[#1a3300]/5 px-2.5 py-1 rounded-[5px]">
