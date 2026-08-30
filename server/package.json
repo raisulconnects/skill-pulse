@@ -4,6 +4,8 @@
   "private": true,
   "description": "A Strapi application",
   "scripts": {
+    "prebuild": "node -e \"const fs=require('fs'); if (!fs.existsSync('./public/uploads')) fs.mkdirSync('./public/uploads', { recursive: true });\"",
+    "prestart": "node -e \"const fs=require('fs'); if (!fs.existsSync('./public/uploads')) fs.mkdirSync('./public/uploads', { recursive: true });\"",
     "build": "strapi build",
     "console": "strapi console",
     "deploy": "strapi deploy",
