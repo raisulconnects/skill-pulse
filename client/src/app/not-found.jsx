@@ -65,14 +65,14 @@ export default function NotFound() {
             <Home className="w-4 h-4 text-[#ffe95c]" />
             <span>Back to Dashboard</span>
           </Link>
-
+*/}
           <Link
             href="/dashboard/courses"
             className="btn-interactive w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#d5f5c2] border border-[#1a3300] text-[#1a3300] font-medium text-[14px] px-6 py-3 rounded-[6px] hover:bg-[#d5f5c2]/90"
           >
             <BookOpen className="w-4 h-4" />
             <span>Browse Catalog</span>
-          </Link> */}
+          </Link>
 
           <Link
             href="/"
