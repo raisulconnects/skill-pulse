@@ -20,18 +20,18 @@ export default function StatCard({
 
   return (
     <div
-      className={`border border-[#1a3300]/25 rounded-[12px] p-5 ${surfaceClass} transition-transform hover:-translate-y-0.5 duration-200 shadow-[rgba(0,0,0,0.04)_0px_2px_4px]`}
+      className={`border border-[#1a3300]/25 rounded-[12px] p-5 ${surfaceClass} card-hover-lift group shadow-[rgba(0,0,0,0.04)_0px_2px_4px]`}
     >
       <div className="flex items-center justify-between mb-3">
         <span className="text-[13px] font-mono text-[#1a3300]/75 uppercase tracking-wider">
           {label}
         </span>
         {Icon ? (
-          <div className="w-8 h-8 rounded-[6px] bg-[#1a3300]/10 flex items-center justify-center text-[#1a3300]">
+          <div className="w-8 h-8 rounded-[6px] bg-[#1a3300]/10 flex items-center justify-center text-[#1a3300] group-hover:scale-110 transition-transform duration-300">
             <Icon className="w-4 h-4" />
           </div>
         ) : (
-          <Sparkles className="w-4 h-4 text-[#1a3300]/50" />
+          <Sparkles className="w-4 h-4 text-[#1a3300]/50 group-hover:rotate-12 transition-transform duration-300" />
         )}
       </div>
 

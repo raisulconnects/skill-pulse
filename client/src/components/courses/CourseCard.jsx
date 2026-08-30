@@ -45,18 +45,18 @@ export default function CourseCard({
   const progressPercentage = progress?.percentage ?? null;
 
   return (
-    <div className="bg-[#fcfaf5] border border-[#1a3300]/25 rounded-[12px] overflow-hidden flex flex-col justify-between hover:border-[#1a3300] hover:shadow-[rgba(0,0,0,0.06)_0px_4px_12px] transition-all duration-200 group">
+    <div className="bg-[#fcfaf5] border border-[#1a3300]/25 rounded-[12px] overflow-hidden flex flex-col justify-between card-hover-lift group">
       {/* Thumbnail Banner */}
       <div className="h-40 bg-[#d5f5c2]/40 border-b border-[#1a3300]/15 relative overflow-hidden flex items-center justify-center">
         {thumbnail?.url || thumbnail_url ? (
           <img
             src={thumbnail?.url || thumbnail_url}
             alt={title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
           />
         ) : (
           <div className="text-center p-4">
-            <div className="w-12 h-12 rounded-[8px] bg-[#ffe95c] border border-[#1a3300]/20 flex items-center justify-center mx-auto mb-2 text-[#1a3300] shadow-xs">
+            <div className="w-12 h-12 rounded-[8px] bg-[#ffe95c] border border-[#1a3300]/20 flex items-center justify-center mx-auto mb-2 text-[#1a3300] shadow-xs group-hover:scale-110 transition-transform duration-300">
               <BookOpen className="w-6 h-6" />
             </div>
             <span className="text-[11px] font-mono font-medium text-[#1a3300]/70 uppercase tracking-wider">
@@ -83,7 +83,7 @@ export default function CourseCard({
         {/* Enrolled Badge for Students */}
         {userRole === "student" && isEnrolled && (
           <div className="absolute top-3 right-3">
-            <span className="inline-flex items-center gap-1 bg-[#d5f5c2] text-[#1a3300] text-[11px] font-mono font-bold px-2.5 py-1 rounded-[4px] border border-[#1a3300]/20 shadow-xs">
+            <span className="inline-flex items-center gap-1 bg-[#d5f5c2] text-[#1a3300] text-[11px] font-mono font-bold px-2.5 py-1 rounded-[4px] border border-[#1a3300]/20 shadow-xs animate-scale-in">
               <CheckCircle2 className="w-3.5 h-3.5" />
               <span>{progressPercentage !== null ? `${progressPercentage}%` : "Enrolled"}</span>
             </span>
@@ -117,7 +117,7 @@ export default function CourseCard({
               </div>
               <div className="w-full h-2 bg-[#1a3300]/10 rounded-full overflow-hidden border border-[#1a3300]/15">
                 <div
-                  className="h-full bg-[#1a3300] rounded-full transition-all duration-300"
+                  className="h-full bg-[#1a3300] rounded-full progress-bar-fill"
                   style={{ width: `${progressPercentage}%` }}
                 />
               </div>
@@ -156,7 +156,7 @@ export default function CourseCard({
               <>
                 <Link
                   href={`/dashboard/courses/${courseId}`}
-                  className="flex-1 text-center text-[13px] font-medium text-[#1a3300] border border-[#1a3300] rounded-[6px] py-2 hover:bg-[#1a3300]/5 transition-colors"
+                  className="btn-interactive flex-1 text-center text-[13px] font-medium text-[#1a3300] border border-[#1a3300] rounded-[6px] py-2 hover:bg-[#1a3300]/5"
                 >
                   View Details
                 </Link>
@@ -170,10 +170,10 @@ export default function CourseCard({
                   <button
                     onClick={() => onEnroll && onEnroll(courseId)}
                     disabled={isEnrolling}
-                    className="flex-1 inline-flex items-center justify-center gap-1.5 text-[13px] font-medium text-[#fcfaf5] bg-[#1a3300] rounded-[6px] py-2 hover:bg-[#1a3300]/90 transition-all disabled:opacity-50"
+                    className="btn-interactive flex-1 inline-flex items-center justify-center gap-1.5 text-[13px] font-medium text-[#fcfaf5] bg-[#1a3300] rounded-[6px] py-2 hover:bg-[#1a3300]/95 group disabled:opacity-50"
                   >
                     <span>{isEnrolling ? "Enrolling..." : "Enroll Now"}</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <ArrowRight className="w-3.5 h-3.5 text-[#ffe95c] group-hover:translate-x-1 transition-transform" />
                   </button>
                 )}
               </>

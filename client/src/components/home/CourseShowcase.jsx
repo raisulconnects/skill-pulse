@@ -260,11 +260,11 @@ export default function CourseShowcase() {
                 </span>
               </div>
               <Link
-                href={`/courses/${course.id}`}
-                className="inline-flex items-center gap-1.5 bg-[#1a3300] text-[#fcfaf5] text-[13px] font-medium px-4 py-2 rounded-[6px] hover:bg-[#1a3300]/90 transition-colors"
+                href={`/dashboard/courses`}
+                className="btn-interactive inline-flex items-center gap-1.5 bg-[#1a3300] text-[#fcfaf5] text-[13px] font-medium px-4 py-2 rounded-[6px] hover:bg-[#1a3300]/95 group"
               >
                 <span>Enroll Now</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                <ArrowRight className="w-3.5 h-3.5 text-[#ffe95c] group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
           </div>
@@ -274,11 +274,11 @@ export default function CourseShowcase() {
       {/* Explore catalog button */}
       <div className="text-center">
         <Link
-          href="/courses"
-          className="inline-flex items-center gap-2 border-2 border-[#1a3300] bg-transparent text-[#1a3300] text-[15px] font-semibold px-6 py-3 rounded-[6px] hover:bg-[#1a3300] hover:text-[#fcfaf5] transition-all"
+          href="/dashboard/courses"
+          className="btn-interactive inline-flex items-center gap-2 border-2 border-[#1a3300] bg-transparent text-[#1a3300] text-[15px] font-semibold px-6 py-3 rounded-[6px] hover:bg-[#1a3300] hover:text-[#fcfaf5] group"
         >
-          <span>View All 120+ Courses</span>
-          <ArrowRight className="w-4 h-4" />
+          <span>View All Courses</span>
+          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
         </Link>
       </div>
     </section>

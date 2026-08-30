@@ -15,8 +15,8 @@ export default function CtaBanner() {
         />
 
         <div className="relative max-w-[760px] mx-auto flex flex-col items-center">
-          <div className="inline-flex items-center gap-2 bg-[#ffe95c] text-[#1a3300] px-3.5 py-1 rounded-[6px] text-[12px] font-mono font-bold mb-6">
-            <Sparkles className="w-3.5 h-3.5 text-[#1a3300]" />
+          <div className="inline-flex items-center gap-2 bg-[#ffe95c] text-[#1a3300] px-3.5 py-1 rounded-[6px] text-[12px] font-mono font-bold mb-6 animate-float">
+            <Sparkles className="w-3.5 h-3.5 text-[#1a3300] animate-pulse-subtle" />
             <span>START FOR FREE TODAY</span>
           </div>
 
@@ -38,15 +38,15 @@ export default function CtaBanner() {
           <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto justify-center mb-6">
             <Link
               href="/register"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#ffe95c] text-[#1a3300] font-bold text-[16px] px-9 py-4 rounded-[6px] hover:bg-[#ffe95c]/90 transition-transform active:scale-[0.98] shadow-md"
+              className="btn-interactive w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#ffe95c] text-[#1a3300] font-bold text-[16px] px-9 py-4 rounded-[6px] hover:bg-[#ffe95c]/95 group shadow-md"
             >
               <span>Get Started for Free</span>
-              <ArrowRight className="w-5 h-5" />
+              <ArrowRight className="w-5 h-5 text-[#1a3300] group-hover:translate-x-1 transition-transform" />
             </Link>
 
             <Link
-              href="/courses"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-transparent border border-[#fcfaf5]/40 text-[#fcfaf5] text-[16px] font-medium px-8 py-4 rounded-[6px] hover:bg-[#fcfaf5]/10 transition-colors"
+              href="/dashboard/courses"
+              className="btn-interactive w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-transparent border border-[#fcfaf5]/40 text-[#fcfaf5] text-[16px] font-medium px-8 py-4 rounded-[6px] hover:bg-[#fcfaf5]/10"
             >
               <span>Explore Curriculum</span>
             </Link>
