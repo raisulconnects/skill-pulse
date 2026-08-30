@@ -260,7 +260,7 @@ module.exports = createCoreController('api::course.course', ({ strapi }) => ({
         strapi.db.query('plugin::users-permissions.user').count({ where: { user_role: 'instructor' } }),
         strapi.db.query('plugin::users-permissions.user').count({ where: { user_role: 'content_manager' } }),
         strapi.db.query('plugin::users-permissions.user').count({ where: { user_role: 'admin' } }),
-        strapi.db.query('api::course.course').count(),
+        strapi.documents('api::course.course').count(),
         strapi.db.query('api::enrollment.enrollment').count(),
       ]);
 
