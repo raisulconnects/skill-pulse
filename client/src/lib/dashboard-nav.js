@@ -46,6 +46,14 @@ export const ROLE_CONFIG = {
     icon: ShieldAlert,
     description: "Full platform overview, user management & system settings",
   },
+  guest: {
+    label: "Guest Visitor",
+    badgeBg: "bg-[#f1f1f1]",
+    badgeText: "text-[#1a3300]",
+    badgeBorder: "border-[#1a3300]/20",
+    icon: Compass,
+    description: "Browse public courses & explore curriculum",
+  },
 };
 
 export const DASHBOARD_NAV = {

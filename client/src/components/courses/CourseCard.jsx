@@ -152,7 +152,7 @@ export default function CourseCard({
 
           {/* Action Buttons based on Role */}
           <div className="flex items-center gap-2">
-            {userRole === "student" ? (
+            {userRole === "student" || userRole === "guest" ? (
               <>
                 <Link
                   href={`/dashboard/courses/${courseId}`}
