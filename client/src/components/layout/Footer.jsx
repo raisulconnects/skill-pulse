@@ -8,26 +8,26 @@ export default function Footer() {
 
   const footerNav = {
     learn: [
-      { name: "All Courses", href: "/courses" },
-      { name: "Full-Stack Roadmap", href: "#paths" },
-      { name: "AI Engineering", href: "#paths" },
-      { name: "System Design", href: "#paths" },
-      { name: "Free Starter Pack", href: "/courses?filter=free" },
+      { name: "All Courses", href: "/dashboard/courses" },
+      { name: "Full-Stack Roadmap", href: "#" },
+      { name: "AI Engineering", href: "#" },
+      { name: "System Design", href: "#" },
+      { name: "Free Starter Pack", href: "#" },
     ],
     platform: [
-      { name: "Interactive Quizzes", href: "#quizzes" },
-      { name: "Code Playgrounds", href: "/sandbox" },
-      { name: "Verified Certificates", href: "/certificates" },
+      { name: "Interactive Quizzes", href: "#" },
+      { name: "Code Playgrounds", href: "#" },
+      { name: "Verified Certificates", href: "#" },
       { name: "Progress Analytics", href: "/dashboard" },
-      { name: "Community Forum", href: "/community" },
+      { name: "Community Forum", href: "#" },
     ],
     company: [
       { name: "Blog & Journal", href: "/blog" },
-      { name: "About SkillPulse", href: "/about" },
-      { name: "Instructor Portal", href: "/teach" },
-      { name: "Enterprise Plans", href: "/enterprise" },
-      { name: "Careers", href: "/careers" },
-      { name: "Changelog", href: "/changelog" },
+      { name: "About SkillPulse", href: "#" },
+      { name: "Instructor Portal", href: "#" },
+      { name: "Enterprise Plans", href: "#" },
+      { name: "Careers", href: "#" },
+      { name: "Changelog", href: "#" },
     ],
   };
 
@@ -64,7 +64,7 @@ export default function Footer() {
                 />
                 <button
                   type="submit"
-                  className="bg-[#1a3300] text-[#fcfaf5] text-[13px] font-medium px-4 py-2 rounded-[6px] hover:bg-[#1a3300]/90 transition-colors"
+                  className="btn-interactive bg-[#1a3300] text-[#fcfaf5] text-[13px] font-medium px-4 py-2 rounded-[6px] hover:bg-[#1a3300]/95"
                 >
                   Join
                 </button>
@@ -134,13 +134,13 @@ export default function Footer() {
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[13px] font-mono text-[#1a3300]/60">
           <p>© {currentYear} SkillPulse LMS. Built with Next.js & Tailwind CSS.</p>
           <div className="flex items-center gap-6">
-            <Link href="/privacy" className="hover:text-[#1a3300] transition-colors">
+            <Link href="#" className="hover:text-[#1a3300] transition-colors">
               Privacy Policy
             </Link>
-            <Link href="/terms" className="hover:text-[#1a3300] transition-colors">
+            <Link href="#" className="hover:text-[#1a3300] transition-colors">
               Terms of Service
             </Link>
-            <Link href="/security" className="hover:text-[#1a3300] transition-colors">
+            <Link href="#" className="hover:text-[#1a3300] transition-colors">
               Security
             </Link>
           </div>

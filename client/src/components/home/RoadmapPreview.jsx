@@ -112,7 +112,7 @@ export default function RoadmapPreview() {
             <div className="inline-block bg-[#ffe95c] px-3 py-0.5 rounded-[4px] text-[12px] font-mono font-medium text-[#1a3300] mb-3 uppercase tracking-wider">
               Structured Paths
             </div>
-            <h2 
+            <h2
               className="text-[32px] sm:text-[44px] font-[800] text-[#1a3300] leading-tight tracking-[0.03em]"
               style={{ fontFamily: "var(--font-bricolage-grotesque), var(--font-bricolage), sans-serif" }}
             >
@@ -134,19 +134,17 @@ export default function RoadmapPreview() {
               <button
                 key={track.id}
                 onClick={() => setActiveTrack(idx)}
-                className={`text-left p-5 rounded-[12px] border transition-all btn-interactive ${
-                  isSelected
-                    ? "bg-[#1a3300] text-[#fcfaf5] border-[#1a3300] shadow-md"
-                    : "bg-[#fcfaf5] text-[#1a3300] border-[#b6b6b6]/70 hover:border-[#1a3300]"
-                }`}
+                className={`text-left p-5 rounded-[12px] border transition-all btn-interactive ${isSelected
+                  ? "bg-[#1a3300] text-[#fcfaf5] border-[#1a3300] shadow-md"
+                  : "bg-[#fcfaf5] text-[#1a3300] border-[#b6b6b6]/70 hover:border-[#1a3300]"
+                  }`}
               >
                 <div className="flex items-center justify-between mb-2">
                   <span
-                    className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded-[4px] ${
-                      isSelected
-                        ? "bg-[#ffe95c] text-[#1a3300]"
-                        : `${track.badgeColor} text-[#1a3300]`
-                    }`}
+                    className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded-[4px] ${isSelected
+                      ? "bg-[#ffe95c] text-[#1a3300]"
+                      : `${track.badgeColor} text-[#1a3300]`
+                      }`}
                   >
                     Track 0{idx + 1}
                   </span>
@@ -154,9 +152,8 @@ export default function RoadmapPreview() {
                 </div>
                 <h3 className="text-[17px] font-bold tracking-tight mb-1">{track.title}</h3>
                 <p
-                  className={`text-[12px] font-mono ${
-                    isSelected ? "text-[#fcfaf5]/70" : "text-[#1a3300]/60"
-                  }`}
+                  className={`text-[12px] font-mono ${isSelected ? "text-[#fcfaf5]/70" : "text-[#1a3300]/60"
+                    }`}
                 >
                   {track.duration}
                 </p>
@@ -225,7 +222,7 @@ export default function RoadmapPreview() {
               <span>Includes 1-on-1 milestone reviews & capstone grading</span>
             </div>
             <Link
-              href="/dashboard/courses"
+              href="https://roadmap.sh/"
               className="btn-interactive inline-flex items-center gap-2 bg-[#1a3300] text-[#fcfaf5] text-[14px] font-medium px-5 py-2.5 rounded-[6px] hover:bg-[#1a3300]/95 group"
             >
               <span>Start This Skill Path</span>
