@@ -6,11 +6,9 @@ import {
   GraduationCap,
   PlusCircle,
   FileText,
-  HelpCircle,
   Users,
   Layers,
   Settings,
-  BarChart3,
   CheckSquare,
   ShieldAlert,
 } from "lucide-react";
@@ -60,15 +58,12 @@ export const DASHBOARD_NAV = {
     { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
     { name: "My Courses", href: "/dashboard/my-courses", icon: BookOpen },
     { name: "Create Course", href: "/dashboard/courses/create", icon: PlusCircle },
-    { name: "Student Roster", href: "#students", icon: Users },
-    { name: "Analytics", href: "#analytics", icon: BarChart3 },
   ],
   content_manager: [
     { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
     { name: "Manage Courses", href: "/dashboard/manage-courses", icon: BookOpen },
     { name: "Create Course", href: "/dashboard/courses/create", icon: PlusCircle },
     { name: "Blog CMS", href: "/dashboard/blog", icon: FileText },
-    { name: "Quiz Pool", href: "#quiz-pool", icon: HelpCircle },
   ],
   admin: [
     { name: "Overview", href: "/dashboard", icon: LayoutDashboard },

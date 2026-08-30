@@ -97,20 +97,12 @@ export default function LoginPage() {
 
           {/* Password field */}
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <label
-                htmlFor="password"
-                className="block text-[13px] font-mono font-semibold uppercase tracking-wider text-[#1a3300]"
-              >
-                Password
-              </label>
-              <Link
-                href="/forgot-password"
-                className="text-[12px] font-mono text-[#1a3300]/70 hover:text-[#1a3300] underline underline-offset-2 transition-colors"
-              >
-                Forgot password?
-              </Link>
-            </div>
+            <label
+              htmlFor="password"
+              className="block text-[13px] font-mono font-semibold uppercase tracking-wider text-[#1a3300] mb-2"
+            >
+              Password
+            </label>
             <div className="relative">
               <input
                 id="password"
@@ -175,26 +167,6 @@ export default function LoginPage() {
             )}
           </button>
         </form>
-
-        {/* Demo Fast-Fill Helper */}
-        <div className="mt-6 pt-5 border-t border-[#b6b6b6]/40 flex items-center justify-between text-[12px] font-mono text-[#1a3300]/70">
-          <span>Quick fill test:</span>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() =>
-                setFormData({
-                  identifier: "johndoe",
-                  password: "password123",
-                  rememberMe: true,
-                })
-              }
-              className="bg-[#d5f5c2] border border-[#1a3300]/20 px-2 py-0.5 rounded-[4px] text-[#1a3300] font-semibold hover:bg-[#d5f5c2]/80"
-            >
-              Demo User
-            </button>
-          </div>
-        </div>
 
         {/* Link to Registration */}
         <div className="mt-6 text-center text-[14px] text-[#1a3300]/80">

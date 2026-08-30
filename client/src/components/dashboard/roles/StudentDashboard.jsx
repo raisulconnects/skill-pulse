@@ -5,7 +5,6 @@ import Link from "next/link";
 import { Sparkles, Play, CheckCircle2, Trophy, Clock, ArrowRight, BookOpen, Compass, Award } from "lucide-react";
 import StatCard from "../shared/StatCard";
 import SectionHeader from "../shared/SectionHeader";
-import { MOCK_STUDENT_DATA } from "@/lib/mock-dashboard-data";
 
 export default function StudentDashboard({ user }) {
   const [enrollments, setEnrollments] = useState([]);
